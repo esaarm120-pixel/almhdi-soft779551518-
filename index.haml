@@ -3,122 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>النظام المحاسبي - تسجيل الدخول</title>
+    <title>تطبيق إدارة المحل</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f7f6;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .login-container {
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            width: 100%;
-            max-width: 400px;
-            box-sizing: border-box;
-        }
-        h2 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 24px;
-        }
-        .form-group {
-            margin-bottom: 20px;
-        }
-        label {
-            display: block;
-            margin-bottom: 8px;
-            color: #666;
-        }
-        input [type="email"], input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        button {
-            width: 100%;
-            padding: 12px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-        .error-message {
-            color: red;
-            text-align: center;
-            margin-top: 15px;
-            font-size: 14px;
-        }
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f4f9; }
+        .header { text-align: center; padding: 15px; background: #fff; border-bottom: 2px solid #ddd; }
+        .header input { margin: 5px; padding: 8px; }
+        .marquee-text { direction: rtl; font-weight: bold; color: #333; margin-top: 10px; }
+        
+        /* تنسيق أزرار التبويبات */
+        .tabs { display: flex; justify-content: center; gap: 10px; margin: 15px; }
+        .tab-btn { padding: 10px 20px; cursor: pointer; border: none; background: #007bff; color: white; border-radius: 5px; font-weight: bold;}
+        
+        /* تنسيق حاويات الأقسام */
+        .tab-content { display: none; padding: 20px; background: white; margin: 15px; border-radius: 5px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .active { display: block; } /* يظهر القسم النشط فقط */
     </style>
 </head>
 <body>
 
-<div class="login-container">
-    <h2>تسجيل الدخول للنظام</h2>
-    <div class="form-group">
-        <label for="email">البريد الإلكتروني:</label>
-        <input type="email" id="email" placeholder="example@test.com">
+    <!-- الترويسة -->
+    <div class="header">
+        <input type="file" id="logoUpload" accept="image/*" title="اختر شعار المحل">
+        <input type="text" placeholder="اكتب اسم المحل هنا..." id="shopName">
+        
+        <!-- الشريط النصي المتحرك -->
+        <marquee class="marquee-text">برمجة وتصميم عصام المهدي 779551518 اذكر الله وصل على النبي</marquee>
     </div>
-    <div class="form-group">
-        <label for="password">كلمة المرور:</label>
-        <input type="password" id="password" placeholder="******">
+
+    <!-- أزرار الأقسام (أ، ب، ج) -->
+    <div class="tabs">
+        <button class="tab-btn" onclick="openTab('tasks')">أ - المهمات</button>
+        <button class="tab-btn" onclick="openTab('shortages')">ب - النواقص</button>
+        <button class="tab-btn" onclick="openTab('prices')">ج - الأسعار</button>
     </div>
-    <button id="loginBtn">دخول</button>
-    <div class="error-message" id="errorMessage"></div>
-</div>
 
-<script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+    <!-- الأقسام الثلاثة -->
+    <div id="tasks" class="tab-content active">
+        <h3>قسم المهمات (سيتم إضافة الأقسام الأربعة هنا)</h3>
+    </div>
+    
+    <div id="shortages" class="tab-content">
+        <h3>قسم النواقص (سيتم إضافة الجداول هنا)</h3>
+    </div>
+    
+    <div id="prices" class="tab-content">
+        <h3>قسم الأسعار (سيتم إضافة جدول الخصومات هنا)</h3>
+    </div>
 
-    // إعدادات Firebase الخاصة بمشروعك
-    const firebaseConfig = {
-      apiKey: "AIzaSyBzUUx_A0PyMwtEij_uFyLBwzJPZkVxdnk",
-      authDomain: "almhdi-soft779551518.firebaseapp.com",
-      projectId: "almhdi-soft779551518",
-      storageBucket: "almhdi-soft779551518.firebasestorage.app",
-      messagingSenderId: "386533839313",
-      appId: "1:386533839313:web:575bc9978c0e38ffd950f0",
-      measurementId: "G-MZSN60VZ63"
-    };
-
-    // تهيئة Firebase
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    // تفعيل زر تسجيل الدخول
-    document.getElementById('loginBtn').addEventListener('click', () => {
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const errorMessage = document.getElementById('errorMessage');
-        errorMessage.innerText = "";
-
-        signInWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // نجاح تسجيل الدخول
-                alert("تم تسجيل الدخول بنجاح!");
-                // هنا سنقوم بالتوجيه إلى الصفحة المحاسبية الرئيسية لاحقاً
-                // window.location.href = "dashboard.html";
-            })
-            .catch((error) => {
-                // فشل تسجيل الدخول
-                errorMessage.innerText = "خطأ: تأكد من البريد الإلكتروني أو كلمة المرور.";
-            });
-    });
-</script>
+    <script>
+        // دالة بسيطة للتنقل بين الأقسام
+        function openTab(tabId) {
+            let contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+        }
+    </script>
 
 </body>
 </html>
