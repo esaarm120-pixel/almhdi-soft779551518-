@@ -1,136 +1,203 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>إدارة محلات قيس لمواد البناء</title>
+<title>
+إدارة محلات قيس لمواد البناء
+</title>
+
 
 <link rel="stylesheet" href="css/style.css">
 
-<!-- أيقونات -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
 
 </head>
+
 
 <body>
 
 
 <!-- الترويسة -->
-<header class="header">
 
-    <div class="logo-area">
+<header class="app-header">
 
-        <div class="store-icon">
-            <i class="fa-solid fa-building"></i>
-        </div>
 
-        <div class="title-area">
+<div class="header-icon">
 
-            <h1>
-            إدارة محلات قيس لمواد البناء
-            </h1>
+<i class="fa-solid fa-shop"></i>
 
-            <p>
-            نظام إدارة المحل الذكي
-            </p>
+</div>
 
-        </div>
 
-    </div>
+<div class="header-text">
+
+<h1>
+إدارة محلات قيس
+</h1>
+
+<h2>
+لمواد البناء
+</h2>
+
+<p>
+نظام إدارة المحل الذكي
+</p>
+
+
+</div>
 
 
 </header>
 
 
 
+
 <!-- الشريط المتحرك -->
 
-<div class="marquee">
+<div class="developer-bar">
 
-<span>
-برمجة وتصميم عصام المهدي 779551518 &nbsp; | &nbsp;
+<marquee direction="left">
+
+برمجة وتصميم عصام المهدي 779551518
+&nbsp;&nbsp; | &nbsp;&nbsp;
 اذكر الله وصل على النبي
-</span>
+
+</marquee>
 
 </div>
 
 
 
-<!-- الصفحة الرئيسية -->
-
-<main class="home">
 
 
-<h2>
-لوحة التحكم
-</h2>
+<!-- القائمة الرئيسية -->
 
 
-<div class="menu-grid">
+<section class="dashboard">
+
+
+<h3>
+الرئيسية
+</h3>
+
+
+
+<div class="apps-grid">
+
 
 
 <!-- المهمات -->
 
-<div class="menu-card">
+<div class="app-button"
+onclick="openTasks()">
+
+<div class="icon-box">
 
 <i class="fa-solid fa-list-check"></i>
 
-<h3>
-المهمات
-</h3>
+</div>
 
-<p>
-إدارة ومتابعة المهمات اليومية
-</p>
+
+<span>
+المهمات
+</span>
+
 
 </div>
+
 
 
 
 <!-- النواقص -->
 
-<div class="menu-card">
+<div class="app-button"
+onclick="openShortages()">
 
-<i class="fa-solid fa-boxes-stacked"></i>
 
-<h3>
-النواقص المطلوبة
-</h3>
+<div class="icon-box">
 
-<p>
-متابعة الأصناف الناقصة
-</p>
+<i class="fa-solid fa-box-open"></i>
 
 </div>
+
+
+<span>
+النواقص المطلوبة
+</span>
+
+
+</div>
+
+
 
 
 
 <!-- الأسعار -->
 
-<div class="menu-card">
+
+<div class="app-button"
+onclick="openPrices()">
+
+
+<div class="icon-box">
 
 <i class="fa-solid fa-tags"></i>
 
-<h3>
+</div>
+
+
+<span>
 الأسعار
-</h3>
-
-<p>
-إدارة أسعار المنتجات والخصومات
-</p>
-
-</div>
-
+</span>
 
 
 </div>
 
 
-</main>
+
+</div>
 
 
-<script src="js/app.js"></script>
+</section>
+
+
+
+
+
+<script>
+
+
+function openTasks(){
+
+alert("قسم المهمات");
+
+}
+
+
+function openShortages(){
+
+alert("قسم النواقص");
+
+}
+
+
+function openPrices(){
+
+alert("قسم الأسعار");
+
+}
+
+
+</script>
+
 
 </body>
-</html> 
+
+</html>
