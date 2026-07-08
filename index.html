@@ -1,22 +1,16 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
-
 <head>
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>
-إدارة محلات قيس لمواد البناء
-</title>
-
+<title>إدارة محلات قيس لمواد البناء</title>
 
 <link rel="stylesheet" href="css/style.css">
 
-
 <link rel="stylesheet"
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-
 
 </head>
 
@@ -26,47 +20,42 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
 <!-- الترويسة -->
 
-<header class="app-header">
+<div class="top-card">
+
+    <div class="shop-logo">
+        <i class="fa-solid fa-store"></i>
+    </div>
 
 
-<div class="header-icon">
+    <div class="shop-title">
 
-<i class="fa-solid fa-shop"></i>
+        <h1>
+        إدارة محلات قيس
+        </h1>
+
+        <h2>
+        لمواد البناء
+        </h2>
+
+        <p>
+        نظام إدارة المحل الذكي
+        </p>
+
+    </div>
+
 
 </div>
-
-
-<div class="header-text">
-
-<h1>
-إدارة محلات قيس
-</h1>
-
-<h2>
-لمواد البناء
-</h2>
-
-<p>
-نظام إدارة المحل الذكي
-</p>
-
-
-</div>
-
-
-</header>
-
 
 
 
 <!-- الشريط المتحرك -->
 
-<div class="developer-bar">
+<div class="moving-text">
 
 <marquee direction="left">
 
 برمجة وتصميم عصام المهدي 779551518
-&nbsp;&nbsp; | &nbsp;&nbsp;
+&nbsp; | &nbsp;
 اذكر الله وصل على النبي
 
 </marquee>
@@ -76,128 +65,62 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
 
 
 
-
 <!-- القائمة الرئيسية -->
 
 
-<section class="dashboard">
+<div class="main-menu">
 
 
-<h3>
-الرئيسية
-</h3>
-
-
-
-<div class="apps-grid">
-
-
-
-<!-- المهمات -->
-
-<div class="app-button"
-onclick="openTasks()">
-
-<div class="icon-box">
+<div class="menu-item" onclick="openPage('tasks')">
 
 <i class="fa-solid fa-list-check"></i>
-
-</div>
-
 
 <span>
 المهمات
 </span>
 
-
 </div>
 
 
 
+<div class="menu-item" onclick="openPage('shortages')">
 
-<!-- النواقص -->
-
-<div class="app-button"
-onclick="openShortages()">
-
-
-<div class="icon-box">
-
-<i class="fa-solid fa-box-open"></i>
-
-</div>
-
+<i class="fa-solid fa-boxes-stacked"></i>
 
 <span>
 النواقص المطلوبة
 </span>
 
-
 </div>
 
 
 
-
-
-<!-- الأسعار -->
-
-
-<div class="app-button"
-onclick="openPrices()">
-
-
-<div class="icon-box">
+<div class="menu-item" onclick="openPage('prices')">
 
 <i class="fa-solid fa-tags"></i>
-
-</div>
-
 
 <span>
 الأسعار
 </span>
 
-
 </div>
 
 
 
 </div>
-
-
-</section>
-
-
 
 
 
 <script>
 
+function openPage(page){
 
-function openTasks(){
-
-alert("قسم المهمات");
-
-}
-
-
-function openShortages(){
-
-alert("قسم النواقص");
+console.log(page);
 
 }
-
-
-function openPrices(){
-
-alert("قسم الأسعار");
-
-}
-
 
 </script>
 
 
 </body>
-
 </html>
