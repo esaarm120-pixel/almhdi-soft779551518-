@@ -1,157 +1,136 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>إدارة المحل</title>
+<title>إدارة محلات قيس لمواد البناء</title>
 
-<link rel="manifest" href="manifest.json">
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
 
-<meta name="theme-color" content="#1565c0">
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+<!-- أيقونات -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 
 </head>
 
 <body>
 
+
+<!-- الترويسة -->
 <header class="header">
 
-<div class="logoBox">
+    <div class="logo-area">
 
-<input
-type="file"
-id="logoInput"
-accept="image/*"
-hidden>
+        <div class="store-icon">
+            <i class="fa-solid fa-building"></i>
+        </div>
 
-<label for="logoInput" class="logo">
+        <div class="title-area">
 
-<img id="logoImage">
+            <h1>
+            إدارة محلات قيس لمواد البناء
+            </h1>
 
-<span>إضافة شعار</span>
+            <p>
+            نظام إدارة المحل الذكي
+            </p>
 
-</label>
+        </div>
 
-</div>
+    </div>
 
-<div class="shopBox">
-
-<input
-type="text"
-id="shopName"
-placeholder="اسم المحل">
-
-</div>
 
 </header>
 
 
+
+<!-- الشريط المتحرك -->
+
 <div class="marquee">
 
-<div class="marquee-content">
-
-برمجة وتصميم عصام المهدي 779551518 &nbsp;&nbsp;&nbsp;
+<span>
+برمجة وتصميم عصام المهدي 779551518 &nbsp; | &nbsp;
 اذكر الله وصل على النبي
+</span>
 
 </div>
 
-</div>
 
 
+<!-- الصفحة الرئيسية -->
 
-<main class="cards">
+<main class="home">
 
-<button class="card" onclick="location.href='tasks.html'">
 
-<div class="icon">📋</div>
+<h2>
+لوحة التحكم
+</h2>
 
-<div class="title">
+
+<div class="menu-grid">
+
+
+<!-- المهمات -->
+
+<div class="menu-card">
+
+<i class="fa-solid fa-list-check"></i>
+
+<h3>
 المهمات
+</h3>
+
+<p>
+إدارة ومتابعة المهمات اليومية
+</p>
+
 </div>
 
-</button>
 
 
+<!-- النواقص -->
 
-<button class="card" onclick="location.href='shortages.html'">
+<div class="menu-card">
 
-<div class="icon">📦</div>
+<i class="fa-solid fa-boxes-stacked"></i>
 
-<div class="title">
-
+<h3>
 النواقص المطلوبة
+</h3>
+
+<p>
+متابعة الأصناف الناقصة
+</p>
 
 </div>
 
-</button>
 
 
+<!-- الأسعار -->
 
-<button class="card" onclick="location.href='prices.html'">
+<div class="menu-card">
 
-<div class="icon">💰</div>
+<i class="fa-solid fa-tags"></i>
 
-<div class="title">
-
+<h3>
 الأسعار
+</h3>
+
+<p>
+إدارة أسعار المنتجات والخصومات
+</p>
 
 </div>
 
-</button>
 
-
-
-<button class="card" onclick="location.href='users.html'">
-
-<div class="icon">👤</div>
-
-<div class="title">
-
-المستخدمون
 
 </div>
 
-</button>
-
-
-
-<button class="card" onclick="location.href='activity-log.html'">
-
-<div class="icon">📝</div>
-
-<div class="title">
-
-سجل النشاط
-
-</div>
-
-</button>
-
-
-
-<button class="card" onclick="location.href='settings.html'">
-
-<div class="icon">⚙️</div>
-
-<div class="title">
-
-الإعدادات
-
-</div>
-
-</button>
 
 </main>
 
 
-
-<script src="app.js"></script>
+<script src="js/app.js"></script>
 
 </body>
-
-</html>
+</html> 
