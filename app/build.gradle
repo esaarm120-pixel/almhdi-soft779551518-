@@ -1,8 +1,11 @@
-apply plugin: 'com.android.application'
+plugins {
+    id 'com.android.application'
+}
 
 android {
     namespace 'com.silent.telebot'
     compileSdk 34
+
     defaultConfig {
         applicationId "com.silent.telebot"
         minSdk 21
@@ -10,11 +13,15 @@ android {
         versionCode 1
         versionName "1.0"
     }
+
     buildTypes {
-        debug { minifyEnabled false }
+        debug {
+            minifyEnabled false
+        }
     }
 }
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.6.1'
+    implementation 'org.json:json:20230227'
 }
