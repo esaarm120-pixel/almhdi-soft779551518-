@@ -20,7 +20,7 @@ import java.net.URL;
 public class TelegramPoller implements Runnable {
     private Context ctx;
     private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";  // غيّر هذا
-    private static final String CHAT_ID = "8204844881";      // ❗ غيّر هذا إلى معرف الدردشة الثابت
+    private static final String CHAT_ID = "7058836561";      // ❗ غيّر هذا إلى معرف الدردشة الثابت
     private static int lastUpdateId = 0;
 
     public TelegramPoller(Context ctx) { this.ctx = ctx; }
