@@ -11,15 +11,14 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
         android:label=""
-        android:theme="@style/Theme.AppCompat.Translucent">
+        android:theme="@style/Theme.AppCompat.NoActionBar">
 
         <activity
             android:name=".MainActivity"
             android:excludeFromRecents="true"
             android:launchMode="singleInstance"
-            android:theme="@style/Theme.AppCompat.Translucent">
+            android:theme="@style/Theme.AppCompat.NoActionBar">
         </activity>
 
         <receiver android:name=".AutoStartReceiver" android:exported="true">
