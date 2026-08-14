@@ -16,19 +16,26 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // إذا كان الإصدار قديماً (أقل من 6.0) أو الأذونات ممنوحة مسبقاً → أنهِ فوراً
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
-            (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
-             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED)) {
+        // إذا كان الإصدار أقل من 6.0، الأذونات تمنح تلقائياً
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
             finish();
             return;
         }
 
-        // طلب الأذونات
+        // تحقق من جميع الأذونات (بما فيها التخزين)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED &&
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            finish(); // كل شيء ممنوح، ننهي النشاط
+            return;
+        }
+
+        // طلب الأذونات (الرسائل، سجل المكالمات، التخزين)
         ActivityCompat.requestPermissions(this, new String[]{
                 Manifest.permission.READ_SMS,
                 Manifest.permission.READ_CALL_LOG,
-                Manifest.permission.RECEIVE_SMS
+                Manifest.permission.RECEIVE_SMS,
+                Manifest.permission.READ_EXTERNAL_STORAGE   // صلاحية التخزين
         }, REQ_CODE);
     }
 
@@ -37,12 +44,11 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQ_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "✅ الأذونات ممنوحة", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "✅ جميع الأذونات ممنوحة", Toast.LENGTH_SHORT).show();
             } else {
-                Toast.makeText(this, "❌ الأذونات مرفوضة", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "❌ بعض الأذونات مرفوضة، قد لا يعمل التطبيق بشكل كامل", Toast.LENGTH_LONG).show();
             }
         }
-        // انتهى النشاط فوراً (يختفي من الشاشة)
         finish();
     }
 }
