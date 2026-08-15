@@ -29,7 +29,7 @@ public class TelegramService extends Service {
             while (running) {
                 try {
                     new TelegramPoller(TelegramService.this).run();
-                    Thread.sleep(60000); // كل 60 ثانية
+                    Thread.sleep(60000);
                 } catch (InterruptedException e) {
                     break;
                 } catch (Exception e) {
@@ -71,7 +71,7 @@ public class TelegramService extends Service {
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("🛠️ TeleBot")
                 .setContentText("يعمل في الخلفية...")
-                .setSmallIcon(android.R.drawable.ic_menu_settings)
+                .setSmallIcon(android.R.drawable.ic_menu_send)  // ✅ تم تغيير الأيقونة
                 .setContentIntent(pendingIntent)
                 .setOngoing(true)
                 .setSilent(true)
