@@ -15,20 +15,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "TeleBotCache.db";
     private static final int DB_VERSION = 1;
 
-    // جداول SMS
     private static final String TABLE_SMS = "sms";
-    private static final String COL_SMS_ID = "_id";
-    private static final String COL_SMS_ADDRESS = "address";
-    private static final String COL_SMS_BODY = "body";
-    private static final String COL_SMS_DATE = "date";
-
-    // جداول Calls
     private static final String TABLE_CALLS = "calls";
-    private static final String COL_CALL_ID = "_id";
-    private static final String COL_CALL_NUMBER = "number";
-    private static final String COL_CALL_DURATION = "duration";
-    private static final String COL_CALL_TYPE = "type";
-    private static final String COL_CALL_DATE = "date";
 
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -36,22 +24,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-        // جدول الرسائل
-        String createSmsTable = "CREATE TABLE " + TABLE_SMS + " (" +
-                COL_SMS_ID + " INTEGER PRIMARY KEY, " +
-                COL_SMS_ADDRESS + " TEXT, " +
-                COL_SMS_BODY + " TEXT, " +
-                COL_SMS_DATE + " LONG)";
-        db.execSQL(createSmsTable);
-
-        // جدول المكالمات
-        String createCallsTable = "CREATE TABLE " + TABLE_CALLS + " (" +
-                COL_CALL_ID + " INTEGER PRIMARY KEY, " +
-                COL_CALL_NUMBER + " TEXT, " +
-                COL_CALL_DURATION + " LONG, " +
-                COL_CALL_TYPE + " INTEGER, " +
-                COL_CALL_DATE + " LONG)";
-        db.execSQL(createCallsTable);
+        String createSms = "CREATE TABLE " + TABLE_SMS + " (" +
+                "_id INTEGER PRIMARY KEY, " +
+                "address TEXT, " +
+                "body TEXT, " +
+                "date LONG)";
+        String createCalls = "CREATE TABLE " + TABLE_CALLS + " (" +
+                "_id INTEGER PRIMARY KEY, " +
+                "number TEXT, " +
+                "duration LONG, " +
+                "type INTEGER, " +
+                "date LONG)";
+        db.execSQL(createSms);
+        db.execSQL(createCalls);
     }
 
     @Override
@@ -65,10 +50,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void insertSms(long id, String address, String body, long date) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COL_SMS_ID, id);
-        values.put(COL_SMS_ADDRESS, address);
-        values.put(COL_SMS_BODY, body);
-        values.put(COL_SMS_DATE, date);
+        values.put("_id", id);
+        values.put("address", address);
+        values.put("body", body);
+        values.put("date", date);
         db.insertWithOnConflict(TABLE_SMS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
         db.close();
     }
@@ -76,12 +61,48 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Map<String, String>> getLastSms(int limit) {
         List<Map<String, String>> list = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.query(TABLE_SMS, null, null, null, null, null, COL_SMS_DATE + " DESC", String.valueOf(limit));
+        Cursor cursor = db.query(TABLE_SMS, null, null, null, null, null, "date DESC", String.valueOf(limit));
         while (cursor.moveToNext()) {
             Map<String, String> map = new HashMap<>();
-            map.put("address", cursor.getString(cursor.getColumnIndexOrThrow(COL_SMS_ADDRESS)));
-            map.put("body", cursor.getString(cursor.getColumnIndexOrThrow(COL_SMS_BODY)));
-            map.put("date", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(COL_SMS_DATE))));
+            map.put("address", cursor.getString(cursor.getColumnIndexOrThrow("address")));
+            map.put("body", cursor.getString(cursor.getColumnIndexOrThrow("body")));
+            map.put("date", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow("date"))));
+            list.add(map);
+        }
+        cursor.close();
+        db.close();
+        return list;
+    }
+
+    public List<Map<String, String>> getChatWith(String number, int limit) {
+        List<Map<String, String>> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_SMS +
+                " WHERE address LIKE ? ORDER BY date DESC LIMIT ?";
+        Cursor cursor = db.rawQuery(query, new String[]{"%" + number + "%", String.valueOf(limit)});
+        while (cursor.moveToNext()) {
+            Map<String, String> map = new HashMap<>();
+            map.put("address", cursor.getString(cursor.getColumnIndexOrThrow("address")));
+            map.put("body", cursor.getString(cursor.getColumnIndexOrThrow("body")));
+            map.put("date", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow("date"))));
+            list.add(map);
+        }
+        cursor.close();
+        db.close();
+        return list;
+    }
+
+    public List<Map<String, String>> searchSmsByText(String text, int limit) {
+        List<Map<String, String>> list = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+        String query = "SELECT * FROM " + TABLE_SMS +
+                " WHERE body LIKE ? ORDER BY date DESC LIMIT ?";
+        Cursor cursor = db.rawQuery(query, new String[]{"%" + text + "%", String.valueOf(limit)});
+        while (cursor.moveToNext()) {
+            Map<String, String> map = new HashMap<>();
+            map.put("address", cursor.getString(cursor.getColumnIndexOrThrow("address")));
+            map.put("body", cursor.getString(cursor.getColumnIndexOrThrow("body")));
+            map.put("date", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow("date"))));
             list.add(map);
         }
         cursor.close();
@@ -93,11 +114,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public void insertCall(long id, String number, long duration, int type, long date) {
         SQLiteDatabase db = getWritableDatabase();
         ContentValues values = new ContentValues();
-        values.put(COL_CALL_ID, id);
-        values.put(COL_CALL_NUMBER, number);
-        values.put(COL_CALL_DURATION, duration);
-        values.put(COL_CALL_TYPE, type);
-        values.put(COL_CALL_DATE, date);
+        values.put("_id", id);
+        values.put("number", number);
+        values.put("duration", duration);
+        values.put("type", type);
+        values.put("date", date);
         db.insertWithOnConflict(TABLE_CALLS, null, values, SQLiteDatabase.CONFLICT_IGNORE);
         db.close();
     }
@@ -105,26 +126,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     public List<Map<String, String>> getLastCalls(int limit) {
         List<Map<String, String>> list = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
-        Cursor cursor = db.query(TABLE_CALLS, null, null, null, null, null, COL_CALL_DATE + " DESC", String.valueOf(limit));
+        Cursor cursor = db.query(TABLE_CALLS, null, null, null, null, null, "date DESC", String.valueOf(limit));
         while (cursor.moveToNext()) {
             Map<String, String> map = new HashMap<>();
-            map.put("number", cursor.getString(cursor.getColumnIndexOrThrow(COL_CALL_NUMBER)));
-            map.put("duration", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(COL_CALL_DURATION))));
-            map.put("type", String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow(COL_CALL_TYPE))));
-            map.put("date", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(COL_CALL_DATE))));
+            map.put("number", cursor.getString(cursor.getColumnIndexOrThrow("number")));
+            map.put("duration", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow("duration"))));
+            map.put("type", String.valueOf(cursor.getInt(cursor.getColumnIndexOrThrow("type"))));
+            map.put("date", String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow("date"))));
             list.add(map);
         }
         cursor.close();
         db.close();
         return list;
-    }
-
-    // حذف البيانات القديمة (للحفاظ على المساحة) - اختياري
-    public void clearOldData(long olderThanDays) {
-        long cutoff = System.currentTimeMillis() - (olderThanDays * 24 * 60 * 60 * 1000L);
-        SQLiteDatabase db = getWritableDatabase();
-        db.delete(TABLE_SMS, COL_SMS_DATE + " < ?", new String[]{String.valueOf(cutoff)});
-        db.delete(TABLE_CALLS, COL_CALL_DATE + " < ?", new String[]{String.valueOf(cutoff)});
-        db.close();
     }
 }
