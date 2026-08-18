@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.silent.telebot">
+    xmlns:tools="http://schemas.android.com/tools">
 
     <!-- ==================== الأذونات ==================== -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -20,8 +19,7 @@
         android:allowBackup="true"
         android:label="المايسترو"
         android:theme="@style/Theme.AppCompat.NoActionBar"
-        android:requestLegacyExternalStorage="true"
-        android:icon="@mipmap/ic_launcher">
+        android:requestLegacyExternalStorage="true">
 
         <!-- ==================== النشاط الرئيسي (لعبة الكلمات المتقاطعة) ==================== -->
         <activity
