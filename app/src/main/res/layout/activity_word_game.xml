@@ -45,13 +45,34 @@
         android:max="100"
         android:progressTint="#4CAF50" />
 
+    <!-- ========================================== -->
+    <!-- منطقة عرض عبارات عصام المهدي التحفيزية    -->
+    <!-- ========================================== -->
+    <TextView
+        android:id="@+id/tv_motivation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/progress_bar"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginEnd="8dp"
+        android:text=""
+        android:textSize="16sp"
+        android:textColor="#FFD700"
+        android:gravity="center"
+        android:background="#1A1A1A"
+        android:padding="12dp"
+        android:minHeight="50dp"
+        android:textStyle="bold"
+        android:alpha="0.9" />
+
     <!-- شبكة الأحرف 5x5 -->
     <GridLayout
         android:id="@+id/grid_letters"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/progress_bar"
-        android:layout_marginTop="24dp"
+        android:layout_below="@id/tv_motivation"
+        android:layout_marginTop="16dp"
         android:layout_centerHorizontal="true"
         android:rowCount="5"
         android:columnCount="5"
@@ -64,7 +85,7 @@
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:layout_below="@id/grid_letters"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="16dp"
         android:text=""
         android:textSize="26sp"
         android:textColor="#FFD700"
@@ -123,14 +144,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@id/btn_submit"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="12dp"
         android:text=""
         android:textSize="14sp"
         android:textColor="#AAAAAA"
         android:gravity="center"
         android:minHeight="40dp" />
 
-    <!-- زر إعادة التشغيل السري -->
+    <!-- زر إعادة التشغيل السري (يظهر فقط عند الحاجة) -->
     <Button
         android:id="@+id/btn_reset_game"
         android:layout_width="wrap_content"
