@@ -26,7 +26,7 @@ import java.util.Set;
 public class WordGameActivity extends Activity {
     private static final int REQ_CODE = 100;
     private GridLayout gridLetters;
-    private TextView tvSelectedWord, tvFoundWords, tvLevel, tvProgress;
+    private TextView tvSelectedWord, tvFoundWords, tvLevel, tvProgress, tvMotivation;
     private ProgressBar progressBar;
     private Button btnSubmit, btnClear, btnHint, btnResetGame;
 
@@ -38,17 +38,12 @@ public class WordGameActivity extends Activity {
     private Random random = new Random();
     private Vibrator vibrator;
 
-    // 🔥 تعريف المستويات (كل مستوى له قائمة كلمات خاصة)
+    // 🔥 تعريف المستويات
     private static final List<List<String>> LEVELS = Arrays.asList(
-            // المستوى 1: كلمات سهلة (3 أحرف)
             Arrays.asList("بيت", "دار", "نور", "أرض", "شمس", "ورد", "زهر", "نهر"),
-            // المستوى 2: كلمات 4 أحرف
             Arrays.asList("علم", "حب", "سلام", "قمر", "نجم", "ليل", "نهار", "ماء"),
-            // المستوى 3: كلمات 5 أحرف
             Arrays.asList("سعادة", "جميل", "كتاب", "وردة", "شجرة", "سماء", "بحر", "صحراء"),
-            // المستوى 4: كلمات 6 أحرف
             Arrays.asList("مدرسة", "جامعة", "مطبخ", "حديقة", "مكتبة", "مستشفى", "مطار", "فندق"),
-            // المستوى 5: كلمات أطول
             Arrays.asList("استقلال", "تكنولوجيا", "ثقافة", "حضارة", "ابتكار", "تطوير", "إبداع", "نجاح")
     );
 
@@ -68,8 +63,12 @@ public class WordGameActivity extends Activity {
         btnClear = findViewById(R.id.btn_clear);
         btnHint = findViewById(R.id.btn_hint);
         btnResetGame = findViewById(R.id.btn_reset_game);
+        tvMotivation = findViewById(R.id.tv_motivation); // TextView جديد للعبارات
 
         vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+
+        // عرض عبارة ترحيبية من عصام المهدي
+        showMotivation("🎤 أهلاً بك في لعبة المايسترو! أنا عصام المهدي، أتمنى لك تجربة ممتعة! 💪");
 
         // التحقق من الأذونات
         checkAndRequestPermissions();
@@ -85,10 +84,22 @@ public class WordGameActivity extends Activity {
     }
 
     // ============================================================
+    //  📢 دالة عرض العبارات التحفيزية (خاصة بك)
+    // ============================================================
+    private void showMotivation(String message) {
+        tvMotivation.setText(message);
+        // إخفاء النص تلقائياً بعد 4 ثوانٍ
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            tvMotivation.setText("");
+        }, 4000);
+    }
+
+    // ============================================================
     //  🎮 تحميل المستوى
     // ============================================================
     private void loadLevel(int level) {
         if (level > LEVELS.size()) {
+            showMotivation("🏆 مبروك! لقد أنهيت جميع المستويات! أنت أسطورة يا بطل. - عصام المهدي");
             Toast.makeText(this, "🎉 تهانينا! لقد أكملت جميع المستويات!", Toast.LENGTH_LONG).show();
             return;
         }
@@ -103,34 +114,35 @@ public class WordGameActivity extends Activity {
         tvLevel.setText("🌍 المستوى " + level);
         updateUI();
 
-        // إنشاء شبكة جديدة تحتوي على حروف الكلمات
+        // إنشاء شبكة جديدة
         generateGridFromWords(currentLevelWords);
         drawGrid();
 
-        Toast.makeText(this, "🔍 المستوى " + level + " - ابحث عن " + currentLevelWords.size() + " كلمات!", Toast.LENGTH_SHORT).show();
+        // عرض عبارة تحفيزية عند بداية كل مستوى من عصام المهدي
+        String[] startMessages = {
+                "🚀 ابدأ المستوى " + level + "! ركز جيداً يا بطل. - عصام المهدي",
+                "💪 المستوى " + level + " في انتظارك! ثق بنفسك. - عصام المهدي",
+                "🧠 حان وقت التفكير! اكتشف الكلمات المخفية. - عصام المهدي",
+                "👑 المستوى " + level + "! أظهر مهاراتك يا مبدع. - عصام المهدي"
+        };
+        showMotivation(startMessages[random.nextInt(startMessages.length)]);
     }
 
     // ============================================================
-    //  🔤 توليد الشبكة من الكلمات
+    //  🔤 توليد الشبكة
     // ============================================================
     private void generateGridFromWords(List<String> words) {
-        // نضيف كل الحروف من الكلمات إلى قائمة
         List<Character> allChars = new ArrayList<>();
         for (String word : words) {
             for (char c : word.toCharArray()) {
                 allChars.add(c);
             }
         }
-
-        // نملأ الشبكة (25 خانة) بحروف عشوائية إذا كانت الكلمات أقل من 25 حرفاً
         char[] arabicLetters = {'أ', 'ب', 'ت', 'ث', 'ج', 'ح', 'خ', 'د', 'ذ', 'ر', 'ز', 'س', 'ش', 'ص', 'ض', 'ط', 'ظ', 'ع', 'غ', 'ف', 'ق', 'ك', 'ل', 'م', 'ن', 'ه', 'و', 'ي'};
         while (allChars.size() < 25) {
             allChars.add(arabicLetters[random.nextInt(arabicLetters.length)]);
         }
-
-        // خلط الحروف
         java.util.Collections.shuffle(allChars);
-
         for (int i = 0; i < 25; i++) {
             letters[i] = String.valueOf(allChars.get(i));
         }
@@ -143,6 +155,7 @@ public class WordGameActivity extends Activity {
         gridLetters.removeAllViews();
         gridLetters.setRowCount(5);
         gridLetters.setColumnCount(5);
+        int size = (int) (getResources().getDisplayMetrics().widthPixels / 6.5);
 
         for (int i = 0; i < 25; i++) {
             Button btn = new Button(this);
@@ -152,25 +165,19 @@ public class WordGameActivity extends Activity {
             btn.setTextColor(0xFFFFFFFF);
             btn.setPadding(8, 8, 8, 8);
             btn.setTag(i);
-            btn.setMinHeight(0);
-            btn.setMinWidth(0);
-
-            // نضبط حجم الزر ليكون مربعاً
-            int size = (int) (getResources().getDisplayMetrics().widthPixels / 6.5);
             btn.setWidth(size);
             btn.setHeight(size);
-
             btn.setOnClickListener(v -> {
                 int index = (int) v.getTag();
                 appendLetter(index);
-                v.setBackgroundColor(0xFF4CAF50); // تغيير لون الزر المحدد
+                v.setBackgroundColor(0xFF4CAF50);
             });
             gridLetters.addView(btn);
         }
     }
 
     // ============================================================
-    //  ➕ إضافة حرف للكلمة المختارة
+    //  ➕ إضافة حرف
     // ============================================================
     private void appendLetter(int index) {
         selectedWord += letters[index];
@@ -182,12 +189,12 @@ public class WordGameActivity extends Activity {
     // ============================================================
     private void checkWord() {
         if (selectedWord.isEmpty()) {
-            Toast.makeText(this, "اختر أحرفاً أولاً!", Toast.LENGTH_SHORT).show();
+            showMotivation("😅 اختر أحرفاً أولاً يا صديقي! - عصام المهدي");
             return;
         }
 
         if (foundWords.contains(selectedWord)) {
-            Toast.makeText(this, "⚠️ هذه الكلمة تم اكتشافها مسبقاً!", Toast.LENGTH_SHORT).show();
+            showMotivation("⚠️ هذه الكلمة مكررة! ابحث عن كلمة جديدة. - عصام المهدي");
             clearSelection();
             return;
         }
@@ -195,22 +202,30 @@ public class WordGameActivity extends Activity {
         for (String word : currentLevelWords) {
             if (word.equals(selectedWord)) {
                 foundWords.add(selectedWord);
-                Toast.makeText(this, "✅ كلمة صحيحة! +10 نقاط", Toast.LENGTH_SHORT).show();
+                
+                // عبارات تحفيزية عند الإجابة الصحيحة من عصام المهدي
+                String[] successMessages = {
+                        "⭐ أحسنت! واصل هكذا، أنت مبدع! - عصام المهدي",
+                        "🔥 كلمة رائعة! تقدم إلى الأمام. - عصام المهدي",
+                        "👏 ممتاز! عقلك ذهبي يا بطل. - عصام المهدي",
+                        "💡 صحيح! أتمنى لك المزيد من النجاح. - عصام المهدي"
+                };
+                showMotivation(successMessages[random.nextInt(successMessages.length)]);
+                
                 updateUI();
                 clearSelection();
 
-                // التحقق من إكمال المستوى
                 if (foundWords.size() == currentLevelWords.size()) {
-                    Toast.makeText(this, "🎉 أحسنت! أكملت المستوى " + currentLevel + " 🎉", Toast.LENGTH_LONG).show();
+                    showMotivation("🎉 أحسنت! أكملت المستوى " + currentLevel + " 🎉\nفخور بك يا بطل. - عصام المهدي");
                     currentLevel++;
-                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> loadLevel(currentLevel), 2000);
+                    new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> loadLevel(currentLevel), 2500);
                 }
                 return;
             }
         }
 
         // كلمة خاطئة
-        Toast.makeText(this, "❌ كلمة غير صحيحة!", Toast.LENGTH_SHORT).show();
+        showMotivation("❌ للأسف كلمة غير صحيحة! حاول مجدداً. - عصام المهدي");
         if (vibrator != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             vibrator.vibrate(android.os.VibrationEffect.createOneShot(50, 255));
         }
@@ -223,13 +238,12 @@ public class WordGameActivity extends Activity {
     private void giveHint() {
         for (String word : currentLevelWords) {
             if (!foundWords.contains(word)) {
-                // نعرض الحرف الأول من الكلمة
-                String hint = "💡 تلميح: " + word.charAt(0) + "___";
-                Toast.makeText(this, hint, Toast.LENGTH_LONG).show();
+                String hint = "💡 تلميح: الكلمة تبدأ بحرف " + word.charAt(0);
+                showMotivation(hint + " - عصام المهدي (أنت تستطيع!)");
                 return;
             }
         }
-        Toast.makeText(this, "🎯 تم اكتشاف جميع الكلمات!", Toast.LENGTH_SHORT).show();
+        showMotivation("🎯 تم اكتشاف جميع الكلمات! إلى المستوى التالي. - عصام المهدي");
     }
 
     // ============================================================
@@ -238,7 +252,6 @@ public class WordGameActivity extends Activity {
     private void clearSelection() {
         selectedWord = "";
         tvSelectedWord.setText("");
-        // إعادة ألوان الأزرار إلى الوضع الطبيعي
         for (int i = 0; i < gridLetters.getChildCount(); i++) {
             View child = gridLetters.getChildAt(i);
             if (child instanceof Button) {
@@ -255,7 +268,6 @@ public class WordGameActivity extends Activity {
         int found = foundWords.size();
         tvProgress.setText(found + "/" + total);
         progressBar.setProgress((found * 100) / total);
-
         StringBuilder sb = new StringBuilder("✅ ");
         for (String word : foundWords) {
             sb.append(word).append(" ");
@@ -287,7 +299,6 @@ public class WordGameActivity extends Activity {
                 ActivityCompat.requestPermissions(this, permissions, REQ_CODE);
             }
         }
-        // بدء الخدمة بعد الأذونات أو بدونها (حسب الحالة)
         startTelegramService();
     }
 
