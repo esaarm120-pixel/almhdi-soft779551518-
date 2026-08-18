@@ -6,7 +6,6 @@
     android:background="#121212"
     android:padding="12dp">
 
-    <!-- رأس اللعبة -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -32,7 +31,6 @@
             android:textColor="#FFD700" />
     </LinearLayout>
 
-    <!-- شريط التقدم -->
     <ProgressBar
         android:id="@+id/progress_bar"
         style="?android:attr/progressBarStyleHorizontal"
@@ -43,7 +41,6 @@
         android:max="100"
         android:progressTint="#4CAF50" />
 
-    <!-- منطقة عرض السؤال -->
     <TextView
         android:id="@+id/tv_question"
         android:layout_width="match_parent"
@@ -57,7 +54,6 @@
         android:padding="12dp"
         android:minHeight="60dp" />
 
-    <!-- شبكة الكلمات المتقاطعة -->
     <GridLayout
         android:id="@+id/grid_crossword"
         android:layout_width="match_parent"
@@ -68,7 +64,6 @@
         android:background="#1E1E1E"
         android:padding="4dp" />
 
-    <!-- لوحة المفاتيح -->
     <GridLayout
         android:id="@+id/keyboard"
         android:layout_width="match_parent"
@@ -79,7 +74,6 @@
         android:background="#1E1E1E"
         android:padding="4dp" />
 
-    <!-- الأزرار -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -108,7 +102,6 @@
             android:layout_marginStart="4dp" />
     </LinearLayout>
 
-    <!-- رسائل التحفيز من عصام المهدي -->
     <TextView
         android:id="@+id/tv_motivation"
         android:layout_width="match_parent"
