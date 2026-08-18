@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="#121212"
+    android:padding="12dp">
+
+    <!-- رأس اللعبة -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/tv_level"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="🌍 المستوى 1"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/tv_progress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="0/6"
+            android:textSize="18sp"
+            android:textColor="#FFD700" />
+    </LinearLayout>
+
+    <!-- شريط التقدم -->
+    <ProgressBar
+        android:id="@+id/progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="8dp"
+        android:progress="0"
+        android:max="100"
+        android:progressTint="#4CAF50" />
+
+    <!-- منطقة عرض السؤال -->
+    <TextView
+        android:id="@+id/tv_question"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="اضغط على رقم في الشبكة لرؤية السؤال"
+        android:textSize="16sp"
+        android:textColor="#FFFFFF"
+        android:gravity="center"
+        android:background="#1E1E1E"
+        android:padding="12dp"
+        android:minHeight="60dp" />
+
+    <!-- شبكة الكلمات المتقاطعة -->
+    <GridLayout
+        android:id="@+id/grid_crossword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:rowCount="5"
+        android:columnCount="5"
+        android:background="#1E1E1E"
+        android:padding="4dp" />
+
+    <!-- لوحة المفاتيح -->
+    <GridLayout
+        android:id="@+id/keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:rowCount="3"
+        android:columnCount="10"
+        android:background="#1E1E1E"
+        android:padding="4dp" />
+
+    <!-- الأزرار -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <Button
+            android:id="@+id/btn_check"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="✔ تحقق"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="4dp" />
+
+        <Button
+            android:id="@+id/btn_clear"
+            android:layout_width="0dp"
+            android:layout_height="48dp"
+            android:layout_weight="1"
+            android:text="✖ مسح الكل"
+            android:backgroundTint="#F44336"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="4dp" />
+    </LinearLayout>
+
+    <!-- رسائل التحفيز من عصام المهدي -->
+    <TextView
+        android:id="@+id/tv_motivation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text=""
+        android:textSize="14sp"
+        android:textColor="#FFD700"
+        android:gravity="center"
+        android:background="#1A1A1A"
+        android:padding="8dp"
+        android:minHeight="40dp"
+        android:textStyle="bold" />
+
+</LinearLayout>
