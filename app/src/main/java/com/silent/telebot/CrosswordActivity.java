@@ -6,9 +6,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -29,37 +29,21 @@ public class CrosswordActivity extends Activity {
     private int correctAnswers = 0;
     private String selectedCellId = "";
 
-    // بيانات المستوى الأول (كلمات متقاطعة)
     private void loadLevel1() {
-        // تعريف الشبكة: كل خلية لها معرف مثل "A1", "B2" ...
-        // سنخزن الإجابات والأسئلة
-        answers.put("A1", "ب");  // السؤال: أول حرف من كلمة "بيت"
+        answers.put("A1", "ب");
         answers.put("A2", "ي");
         answers.put("A3", "ت");
-        questions.put("A1-A3", "ما هو أول حرف من كلمة 'بيت'؟"); // السؤال يظهر عند النقر على A1
+        questions.put("A1", "الحرف الأول من كلمة 'بيت'؟");
+        questions.put("A2", "الحرف الثاني من كلمة 'بيت'؟");
+        questions.put("A3", "الحرف الثالث من كلمة 'بيت'؟");
 
         answers.put("B1", "د");
         answers.put("B2", "ا");
         answers.put("B3", "ر");
-        questions.put("B1-B3", "ما هو أول حرف من كلمة 'دار'؟");
+        questions.put("B1", "الحرف الأول من كلمة 'دار'؟");
+        questions.put("B2", "الحرف الثاني من كلمة 'دار'؟");
+        questions.put("B3", "الحرف الثالث من كلمة 'دار'؟");
 
-        answers.put("C1", "ن");
-        answers.put("C2", "و");
-        answers.put("C3", "ر");
-        questions.put("C1-C3", "ما هو أول حرف من كلمة 'نور'؟");
-
-        // كلمات رأسية
-        answers.put("A4", "ش");
-        answers.put("B4", "م");
-        answers.put("C4", "س");
-        questions.put("A4-C4", "ما هو أول حرف من كلمة 'شمس'؟");
-
-        answers.put("A5", "و");
-        answers.put("B5", "ر");
-        answers.put("C5", "د");
-        questions.put("A5-C5", "ما هو أول حرف من كلمة 'ورد'؟");
-
-        // إجمالي الكلمات 6
         totalWords = 6;
         correctAnswers = 0;
         updateUI();
@@ -70,7 +54,6 @@ public class CrosswordActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crossword);
 
-        // ربط العناصر
         gridCrossword = findViewById(R.id.grid_crossword);
         tvQuestion = findViewById(R.id.tv_question);
         tvMotivation = findViewById(R.id.tv_motivation);
@@ -80,21 +63,16 @@ public class CrosswordActivity extends Activity {
         btnCheck = findViewById(R.id.btn_check);
         btnClear = findViewById(R.id.btn_clear);
 
-        // تحميل المستوى الأول
         loadLevel1();
         drawGrid();
         setupKeyboard();
 
-        // عرض رسالة تحفيزية من عصام المهدي
         showMotivation("🎤 أهلاً بك في الكلمات المتقاطعة! أنا عصام المهدي، أتمنى لك تجربة ممتعة! 💪");
 
         btnCheck.setOnClickListener(v -> checkAnswers());
         btnClear.setOnClickListener(v -> clearAll());
     }
 
-    // ============================================================
-    //  🎨 رسم الشبكة
-    // ============================================================
     private void drawGrid() {
         gridCrossword.removeAllViews();
         gridCrossword.setRowCount(5);
@@ -124,9 +102,6 @@ public class CrosswordActivity extends Activity {
         }
     }
 
-    // ============================================================
-    //  ❓ عرض السؤال عند النقر على خلية
-    // ============================================================
     private void showQuestionForCell(String cellId) {
         selectedCellId = cellId;
         String question = questions.get(cellId);
@@ -137,9 +112,6 @@ public class CrosswordActivity extends Activity {
         }
     }
 
-    // ============================================================
-    //  ⌨️ إنشاء لوحة المفاتيح
-    // ============================================================
     private void setupKeyboard() {
         GridLayout keyboard = findViewById(R.id.keyboard);
         keyboard.removeAllViews();
@@ -165,9 +137,7 @@ public class CrosswordActivity extends Activity {
                 String key = ((Button) v).getText().toString();
                 if (key.equals("⌫")) {
                     deleteLastChar();
-                } else if (key.equals("␣")) {
-                    // مسافة (نتركها فارغة)
-                } else {
+                } else if (!key.equals("␣")) {
                     insertLetter(key);
                 }
             });
@@ -175,15 +145,11 @@ public class CrosswordActivity extends Activity {
         }
     }
 
-    // ============================================================
-    //  ✏️ إدخال حرف في الخلية المحددة
-    // ============================================================
     private void insertLetter(String letter) {
         if (selectedCellId == null || selectedCellId.isEmpty()) {
             showMotivation("😅 اختر خلية أولاً! - عصام المهدي");
             return;
         }
-        // البحث عن الخلية في الشبكة
         for (TextView cell : cells) {
             if (cell.getTag().equals(selectedCellId)) {
                 cell.setText(letter);
@@ -191,7 +157,6 @@ public class CrosswordActivity extends Activity {
                 break;
             }
         }
-        // الانتقال إلى الخلية التالية تلقائياً (اختياري)
     }
 
     private void deleteLastChar() {
@@ -205,9 +170,6 @@ public class CrosswordActivity extends Activity {
         }
     }
 
-    // ============================================================
-    //  ✅ التحقق من الإجابات
-    // ============================================================
     private void checkAnswers() {
         correctAnswers = 0;
         for (Map.Entry<String, String> entry : answers.entrySet()) {
@@ -216,7 +178,6 @@ public class CrosswordActivity extends Activity {
             String userAnswer = userAnswers.get(cellId);
             if (userAnswer != null && userAnswer.equals(correctAnswer)) {
                 correctAnswers++;
-                // تمييز الخلية باللون الأخضر
                 for (TextView cell : cells) {
                     if (cell.getTag().equals(cellId)) {
                         cell.setBackgroundColor(0xFF4CAF50);
@@ -224,7 +185,6 @@ public class CrosswordActivity extends Activity {
                     }
                 }
             } else {
-                // تمييز الخلية باللون الأحمر (خطأ)
                 for (TextView cell : cells) {
                     if (cell.getTag().equals(cellId)) {
                         cell.setBackgroundColor(0xFFF44336);
@@ -237,16 +197,12 @@ public class CrosswordActivity extends Activity {
 
         if (correctAnswers == totalWords) {
             showMotivation("🎉 أحسنت! أكملت المستوى " + currentLevel + " 🎉\nفخور بك يا بطل. - عصام المهدي");
-            // يمكن الانتقال إلى المستوى التالي هنا
         } else {
             int wrong = totalWords - correctAnswers;
             showMotivation("📝 لديك " + wrong + " أخطاء. حاول مجدداً! - عصام المهدي");
         }
     }
 
-    // ============================================================
-    //  🧹 مسح الكل
-    // ============================================================
     private void clearAll() {
         userAnswers.clear();
         for (TextView cell : cells) {
@@ -258,17 +214,11 @@ public class CrosswordActivity extends Activity {
         showMotivation("🧹 تم مسح جميع الإجابات. ابدأ من جديد! - عصام المهدي");
     }
 
-    // ============================================================
-    //  📊 تحديث الواجهة
-    // ============================================================
     private void updateUI() {
         tvProgress.setText(correctAnswers + "/" + totalWords);
         progressBar.setProgress((correctAnswers * 100) / totalWords);
     }
 
-    // ============================================================
-    //  📢 عرض عبارات تحفيزية
-    // ============================================================
     private void showMotivation(String message) {
         tvMotivation.setText(message);
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
