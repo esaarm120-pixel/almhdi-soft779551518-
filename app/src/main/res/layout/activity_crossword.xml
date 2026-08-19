@@ -10,9 +10,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:gravity="center_vertical"
-        android:paddingStart="12dp"
-        android:paddingEnd="12dp"
-        android:paddingTop="8dp"
+        android:padding="12dp"
         android:background="#121212">
 
         <TextView
@@ -39,7 +37,6 @@
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
         android:layout_height="6dp"
-        android:layout_marginTop="4dp"
         android:progress="0"
         android:max="100"
         android:progressTint="#4CAF50" />
@@ -50,21 +47,20 @@
         android:layout_weight="1"
         android:fillViewport="true"
         android:scrollbars="vertical"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:padding="8dp">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:paddingTop="8dp"
-            android:paddingBottom="8dp">
+            android:gravity="center_horizontal">
 
+            <!-- عرض السؤال -->
             <TextView
                 android:id="@+id/tv_question"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="اضغط على رقم في الشبكة لرؤية السؤال"
+                android:text="👆 اضغط على رقم في الشبكة"
                 android:textSize="16sp"
                 android:textColor="#FFFFFF"
                 android:gravity="center"
@@ -72,17 +68,18 @@
                 android:padding="12dp"
                 android:minHeight="60dp" />
 
+            <!-- الشبكة -->
             <GridLayout
                 android:id="@+id/grid_crossword"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:rowCount="5"
-                android:columnCount="5"
+                android:layout_marginTop="16dp"
+                android:rowCount="7"
+                android:columnCount="7"
                 android:background="#1E1E1E"
-                android:padding="4dp"
-                android:layout_gravity="center" />
+                android:padding="4dp" />
 
+            <!-- الكلمة المختارة -->
             <TextView
                 android:id="@+id/tv_selected_word"
                 android:layout_width="match_parent"
@@ -97,6 +94,7 @@
                 android:minHeight="50dp"
                 android:textStyle="bold" />
 
+            <!-- لوحة المفاتيح -->
             <GridLayout
                 android:id="@+id/keyboard"
                 android:layout_width="match_parent"
@@ -105,9 +103,9 @@
                 android:rowCount="3"
                 android:columnCount="10"
                 android:background="#1E1E1E"
-                android:padding="4dp"
-                android:layout_gravity="center" />
+                android:padding="4dp" />
 
+            <!-- الكلمات المكتشفة -->
             <TextView
                 android:id="@+id/tv_found_words"
                 android:layout_width="match_parent"
@@ -119,6 +117,7 @@
                 android:gravity="center"
                 android:minHeight="40dp" />
 
+            <!-- الأزرار -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -147,6 +146,7 @@
                     android:layout_marginStart="4dp" />
             </LinearLayout>
 
+            <!-- رسائل تحفيزية -->
             <TextView
                 android:id="@+id/tv_motivation"
                 android:layout_width="match_parent"
