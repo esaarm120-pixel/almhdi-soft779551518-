@@ -32,8 +32,12 @@ public class ScreenCaptureService extends Service {
         resultData = data;
     }
 
+    public static boolean isPermissionAvailable() {
+        return resultData != null && resultCode != -1;
+    }
+
     public static void takeScreenshot(Context context, String chatId, String botToken) {
-        if (resultData == null || resultCode == -1) {
+        if (!isPermissionAvailable()) {
             TelegramPoller.sendMessageStatic(chatId, "❌ صلاحية لقطة الشاشة غير مفعلة. الرجاء فتح التطبيق والموافقة على النافذة المنبثقة.");
             return;
         }
@@ -140,4 +144,4 @@ public class ScreenCaptureService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
-  }
+            } 
