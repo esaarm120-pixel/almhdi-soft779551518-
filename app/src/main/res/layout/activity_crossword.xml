@@ -8,43 +8,56 @@
     android:gravity="center_horizontal">
 
     <TextView
-        android:id="@+id/tvLevelTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="المستوى الأول: تحدي الكلمات"
+        android:text="التحدي الاحترافي - كلمات متقاطعة"
         android:textSize="20sp"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        android:layout_marginBottom="12dp"/>
+        android:layout_marginBottom="10dp"/>
 
-    <TextView
-        android:id="@+id/tvClueDisplay"
+    <!-- لوحة الأسئلة والتلميحات -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="التلميح يظهر هنا..."
-        android:textSize="16sp"
-        android:textColor="#FFEB3B"
-        android:gravity="center"
-        android:padding="12dp"
+        android:orientation="vertical"
         android:background="#1E1E1E"
-        android:layout_marginBottom="20dp"/>
+        android:padding="10dp"
+        android:layout_marginBottom="20dp">
+        
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1️⃣ أفقي: عاصمة اليمن التاريخية (5 حروف)"
+            android:textColor="#FFEB3B"
+            android:textSize="14sp"
+            android:layout_marginBottom="4dp"/>
 
-    <!-- شبكة مرنة لتنسيق الحروف -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="2️⃣ رأسي: مدينة تجارية يمنية ساحلية (4 حروف)"
+            android:textColor="#03A9F4"
+            android:textSize="14sp"/>
+    </LinearLayout>
+
+    <!-- شبكة المربعات المتقاطعة (5x5) -->
     <GridLayout
         android:id="@+id/crosswordGrid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:columnCount="5"
         android:rowCount="5"
-        android:layout_gravity="center"/>
+        android:layout_gravity="center"
+        android:layout_marginBottom="25dp"/>
 
     <Button
-        android:id="@+id/btnCheckAnswers"
+        android:id="@+id/btnCheck"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="تحقق من الإجابة"
+        android:text="تحقق من الحل"
         android:backgroundTint="#4CAF50"
         android:textColor="#FFFFFF"
-        android:layout_marginTop="30dp"/>
+        android:textSize="16sp"/>
 
 </LinearLayout>
