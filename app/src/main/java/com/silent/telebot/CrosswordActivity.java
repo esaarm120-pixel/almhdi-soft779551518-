@@ -355,4 +355,4 @@ public class CrosswordActivity extends Activity {
             tvMotivation.setText("");
         }, 4000);
     }
-                } 
+}
