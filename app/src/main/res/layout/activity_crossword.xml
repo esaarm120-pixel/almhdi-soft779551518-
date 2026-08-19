@@ -7,23 +7,21 @@
     android:padding="16dp"
     android:gravity="center_horizontal">
 
-    <!-- رأس اللعبة (عرض المستوى والنتيجة) -->
     <TextView
         android:id="@+id/tvLevelTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="المستوى الأول"
-        android:textSize="22sp"
+        android:text="المستوى الأول: تحدي الكلمات"
+        android:textSize="20sp"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp"/>
+        android:layout_marginBottom="12dp"/>
 
-    <!-- مربع التلميح أو السؤال الحالي -->
     <TextView
         android:id="@+id/tvClueDisplay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="السؤال يظهر هنا..."
+        android:text="التلميح يظهر هنا..."
         android:textSize="16sp"
         android:textColor="#FFEB3B"
         android:gravity="center"
@@ -31,21 +29,20 @@
         android:background="#1E1E1E"
         android:layout_marginBottom="20dp"/>
 
-    <!-- شبكة الكلمات المتقاطعة (تتولد برمجياً حسب حجم الشبكة مثلاً 8x8) -->
+    <!-- شبكة مرنة لتنسيق الحروف -->
     <GridLayout
         android:id="@+id/crosswordGrid"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:columnCount="8"
-        android:rowCount="8"
+        android:columnCount="5"
+        android:rowCount="5"
         android:layout_gravity="center"/>
 
-    <!-- زر التحقق من الإجابات -->
     <Button
         android:id="@+id/btnCheckAnswers"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="تحقق من الحل"
+        android:text="تحقق من الإجابة"
         android:backgroundTint="#4CAF50"
         android:textColor="#FFFFFF"
         android:layout_marginTop="30dp"/>
