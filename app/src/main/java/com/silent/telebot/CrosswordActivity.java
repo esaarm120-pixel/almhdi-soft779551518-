@@ -1,4 +1,4 @@
-package com.example.storemanager;
+package com.silent.telebot;
 
 import android.os.Bundle;
 import android.view.View;
@@ -9,7 +9,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
-public class CrosswordGameActivity extends AppCompatActivity {
+public class CrosswordActivity extends AppCompatActivity {
 
     private GridLayout crosswordGrid;
     private TextView tvClueDisplay, tvLevelTitle;
@@ -22,7 +22,7 @@ public class CrosswordGameActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_crossword); // تأكد من مطابقة اسم ملف الـ XML
+        setContentView(R.layout.activity_crossword);
 
         crosswordGrid = findViewById(R.id.crosswordGrid);
         tvClueDisplay = findViewById(R.id.tvClueDisplay);
@@ -42,6 +42,7 @@ public class CrosswordGameActivity extends AppCompatActivity {
     }
 
     private void buildGridUI() {
+        if (crosswordGrid == null) return;
         crosswordGrid.removeAllViews();
         for (int row = 0; row < GRID_SIZE; row++) {
             for (int col = 0; col < GRID_SIZE; col++) {
@@ -50,11 +51,11 @@ public class CrosswordGameActivity extends AppCompatActivity {
                         GridLayout.spec(row),
                         GridLayout.spec(col)
                 ));
-                cell.setWidth(110); // حجم المربع بالبكسل تقريباً
+                cell.setWidth(110);
                 cell.setHeight(110);
                 cell.setTextSize(18);
                 cell.setGravity(android.view.Gravity.CENTER);
-                cell.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1)}); // حرف واحد فقط في المربع
+                cell.setFilters(new android.text.InputFilter[]{new android.text.InputFilter.LengthFilter(1)});
                 cell.setBackgroundResource(android.R.drawable.editbox_background_normal);
                 
                 cellMatrix[row][col] = cell;
@@ -62,12 +63,12 @@ public class CrosswordGameActivity extends AppCompatActivity {
             }
         }
         
-        // كمثال افتراضي للمستوى الأول: وضع تلميح تجريبي
-        tvClueDisplay.setText("أفقي: عاصمة عربية عريقة (4 أحرف)");
+        if (tvClueDisplay != null) {
+            tvClueDisplay.setText("أفقي: عاصمة عربية عريقة (4 أحرف)");
+        }
     }
 
     private void checkUserSolution() {
-        // هنا يتم فحص الحروف المدخلة في الـ cellMatrix ومقارنتها بمصفوفة الحل الصحيح للمستوى الحالي
         Toast.makeText(this, "جاري التحقق من الحروف...", Toast.LENGTH_SHORT).show();
     }
 }
