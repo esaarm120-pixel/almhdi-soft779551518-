@@ -3,165 +3,51 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212">
+    android:background="#121212"
+    android:padding="16dp"
+    android:gravity="center_horizontal">
 
-    <LinearLayout
+    <!-- رأس اللعبة (عرض المستوى والنتيجة) -->
+    <TextView
+        android:id="@+id/tvLevelTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="المستوى الأول"
+        android:textSize="22sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <!-- مربع التلميح أو السؤال الحالي -->
+    <TextView
+        android:id="@+id/tvClueDisplay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
+        android:text="السؤال يظهر هنا..."
+        android:textSize="16sp"
+        android:textColor="#FFEB3B"
+        android:gravity="center"
         android:padding="12dp"
-        android:background="#121212">
+        android:background="#1E1E1E"
+        android:layout_marginBottom="20dp"/>
 
-        <TextView
-            android:id="@+id/tv_level"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="🌍 المستوى 1"
-            android:textSize="20sp"
-            android:textColor="#FFFFFF"
-            android:textStyle="bold" />
+    <!-- شبكة الكلمات المتقاطعة (تتولد برمجياً حسب حجم الشبكة مثلاً 8x8) -->
+    <GridLayout
+        android:id="@+id/crosswordGrid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:columnCount="8"
+        android:rowCount="8"
+        android:layout_gravity="center"/>
 
-        <TextView
-            android:id="@+id/tv_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="0/6"
-            android:textSize="18sp"
-            android:textColor="#FFD700" />
-    </LinearLayout>
-
-    <ProgressBar
-        android:id="@+id/progress_bar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <!-- زر التحقق من الإجابات -->
+    <Button
+        android:id="@+id/btnCheckAnswers"
         android:layout_width="match_parent"
-        android:layout_height="6dp"
-        android:progress="0"
-        android:max="100"
-        android:progressTint="#4CAF50" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fillViewport="true"
-        android:scrollbars="vertical"
-        android:padding="8dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal">
-
-            <!-- عرض السؤال -->
-            <TextView
-                android:id="@+id/tv_question"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="👆 اضغط على رقم في الشبكة"
-                android:textSize="16sp"
-                android:textColor="#FFFFFF"
-                android:gravity="center"
-                android:background="#1E1E1E"
-                android:padding="12dp"
-                android:minHeight="60dp" />
-
-            <!-- الشبكة -->
-            <GridLayout
-                android:id="@+id/grid_crossword"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:rowCount="7"
-                android:columnCount="7"
-                android:background="#1E1E1E"
-                android:padding="4dp" />
-
-            <!-- الكلمة المختارة -->
-            <TextView
-                android:id="@+id/tv_selected_word"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text=""
-                android:textSize="22sp"
-                android:textColor="#FFD700"
-                android:gravity="center"
-                android:background="#2A2A2A"
-                android:padding="10dp"
-                android:minHeight="50dp"
-                android:textStyle="bold" />
-
-            <!-- لوحة المفاتيح -->
-            <GridLayout
-                android:id="@+id/keyboard"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:rowCount="3"
-                android:columnCount="10"
-                android:background="#1E1E1E"
-                android:padding="4dp" />
-
-            <!-- الكلمات المكتشفة -->
-            <TextView
-                android:id="@+id/tv_found_words"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text=""
-                android:textSize="14sp"
-                android:textColor="#AAAAAA"
-                android:gravity="center"
-                android:minHeight="40dp" />
-
-            <!-- الأزرار -->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:orientation="horizontal"
-                android:gravity="center">
-
-                <Button
-                    android:id="@+id/btn_check"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="✔ تحقق"
-                    android:backgroundTint="#4CAF50"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginEnd="4dp" />
-
-                <Button
-                    android:id="@+id/btn_clear"
-                    android:layout_width="0dp"
-                    android:layout_height="48dp"
-                    android:layout_weight="1"
-                    android:text="✖ مسح الكل"
-                    android:backgroundTint="#F44336"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginStart="4dp" />
-            </LinearLayout>
-
-            <!-- رسائل تحفيزية -->
-            <TextView
-                android:id="@+id/tv_motivation"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
-                android:text=""
-                android:textSize="14sp"
-                android:textColor="#FFD700"
-                android:gravity="center"
-                android:background="#1A1A1A"
-                android:padding="8dp"
-                android:minHeight="40dp"
-                android:textStyle="bold" />
-
-        </LinearLayout>
-    </ScrollView>
+        android:layout_height="wrap_content"
+        android:text="تحقق من الحل"
+        android:backgroundTint="#4CAF50"
+        android:textColor="#FFFFFF"
+        android:layout_marginTop="30dp"/>
 
 </LinearLayout>
