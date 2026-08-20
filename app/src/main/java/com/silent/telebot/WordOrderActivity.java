@@ -3,6 +3,7 @@ package com.silent.telebot;
 import android.app.Activity;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
@@ -35,7 +36,7 @@ public class WordOrderActivity extends Activity {
     private GridLayout crosswordGrid;
 
     private EditText[][] cells = new EditText[5][5];
-    private final List<String> selectedLetters = new ArrayList<>();
+    private final List<String> selected = new ArrayList<>();
 
     private int level = 1;
     private int score = 0;
@@ -73,17 +74,17 @@ public class WordOrderActivity extends Activity {
     };
 
     private final String[] messages = {
-            "بداية ممتازة يا PLAYER!",
+            "بداية ممتازة يا PLAYER، كل بطل يبدأ بخطوة!",
             "أحسنت يا PLAYER، تركيزك رائع!",
             "استمر يا PLAYER، أنت تتقدم بسرعة!",
             "مذهل يا PLAYER، المرحلة القادمة أصعب!",
             "عقلك يعمل كالأبطال يا PLAYER!",
             "اقتربت من القمة يا PLAYER!",
-            "لا تستسلم يا PLAYER!",
-            "أداء قوي يا PLAYER!",
+            "لا تستسلم يا PLAYER، الحل أمامك!",
+            "أداء قوي يا PLAYER، أنت في مستوى متقدم!",
             "رائع يا PLAYER، لم يبقَ إلا القليل!",
             "هذه روح المحترفين يا PLAYER!",
-            "استثنائي يا PLAYER!",
+            "استثنائي يا PLAYER، أنت قريب من النهاية!",
             "أسطورة يا PLAYER، أكملت جميع المراحل!"
     };
 
@@ -168,8 +169,8 @@ public class WordOrderActivity extends Activity {
     }
 
     private void loadWord() {
-        selectedLetters.clear();
-        answerText.setText("الكلمة: ");
+        selected.clear();
+        answerText.setText("اختر الحروف لتكوين الكلمة");
         lettersRow.removeAllViews();
 
         String word = words[wordIndex];
@@ -186,24 +187,48 @@ public class WordOrderActivity extends Activity {
 
             button.setText(letter);
             button.setTextSize(19);
+            button.setAllCaps(false);
+            button.setGravity(Gravity.CENTER);
+            button.setPadding(0, 0, 0, 0);
+            button.setTypeface(
+                    Typeface.DEFAULT,
+                    Typeface.BOLD
+            );
             button.setTextColor(Color.WHITE);
-            button.setBackgroundColor(Color.rgb(55, 117, 232));
+
+            button.setBackground(createBackground(
+                    Color.rgb(48, 112, 224),
+                    Color.rgb(28, 65, 132),
+                    3,
+                    100
+            ));
+
+            button.setElevation(dp(4));
 
             LinearLayout.LayoutParams params =
-                    new LinearLayout.LayoutParams(0, 58, 1);
+                    new LinearLayout.LayoutParams(
+                            dp(54),
+                            dp(54)
+                    );
 
-            params.setMargins(4, 4, 4, 4);
+            params.setMargins(
+                    dp(3),
+                    dp(3),
+                    dp(3),
+                    dp(3)
+            );
+
             lettersRow.addView(button, params);
 
             button.setOnClickListener(v -> {
                 v.setEnabled(false);
 
-                selectedLetters.add(
+                selected.add(
                         button.getText().toString()
                 );
 
                 answerText.setText(
-                        "الكلمة: " + joinLetters()
+                        join(selected)
                 );
             });
         }
@@ -211,21 +236,14 @@ public class WordOrderActivity extends Activity {
         wordIndex = (wordIndex + 1) % words.length;
     }
 
-    private String joinLetters() {
-        StringBuilder result = new StringBuilder();
-
-        for (String letter : selectedLetters) {
-            result.append(letter);
-        }
-
-        return result.toString();
-    }
-
     private void checkWord() {
         String expected =
-                words[(wordIndex + words.length - 1) % words.length];
+                words[
+                        (wordIndex + words.length - 1)
+                                % words.length
+                ];
 
-        if (joinLetters().equals(expected)) {
+        if (join(selected).equals(expected)) {
             score += 10 * level;
             nextLevel();
         } else {
@@ -260,7 +278,7 @@ public class WordOrderActivity extends Activity {
     private void nextLevel() {
         attempts = 3;
 
-        if (level >= MAX_LEVEL) {
+        if (level == MAX_LEVEL) {
             updateHeader();
 
             Toast.makeText(
@@ -275,18 +293,28 @@ public class WordOrderActivity extends Activity {
 
         level++;
         updateHeader();
-        loadWord();
         buildCrossword();
+        loadWord();
 
         Toast.makeText(
                 this,
                 "أحسنت يا " + PLAYER +
-                        "! انتقلت إلى مرحلة أصعب",
+                        "! المرحلة التالية أصعب",
                 Toast.LENGTH_SHORT
         ).show();
     }
 
-    private char[][] getSolution() {
+    private String join(List<String> letters) {
+        StringBuilder result = new StringBuilder();
+
+        for (String letter : letters) {
+            result.append(letter);
+        }
+
+        return result.toString();
+    }
+
+    private char[][] solution() {
         char[][] grid = new char[5][5];
 
         for (int row = 0; row < 5; row++) {
@@ -318,7 +346,7 @@ public class WordOrderActivity extends Activity {
     }
 
     private void buildCrossword() {
-        char[][] solution = getSolution();
+        char[][] solution = solution();
 
         crosswordGrid.removeAllViews();
         crosswordGrid.setColumnCount(5);
@@ -345,10 +373,19 @@ public class WordOrderActivity extends Activity {
 
                 cell.setEnabled(enabled);
 
-                cell.setBackgroundColor(
+                cell.setBackground(createBackground(
                         enabled
                                 ? Color.WHITE
-                                : Color.rgb(220, 228, 240)
+                                : Color.rgb(218, 227, 240),
+                        enabled
+                                ? Color.rgb(56, 102, 168)
+                                : Color.rgb(183, 198, 219),
+                        2,
+                        8
+                ));
+
+                cell.setElevation(
+                        enabled ? dp(2) : 0
                 );
 
                 GridLayout.LayoutParams params =
@@ -356,10 +393,21 @@ public class WordOrderActivity extends Activity {
 
                 params.width = 0;
                 params.height = 62;
+
                 params.columnSpec =
-                        GridLayout.spec(column, 1, 1f);
+                        GridLayout.spec(
+                                column,
+                                1,
+                                1f
+                        );
+
                 params.rowSpec =
-                        GridLayout.spec(row, 1, 1f);
+                        GridLayout.spec(
+                                row,
+                                1,
+                                1f
+                        );
+
                 params.setMargins(2, 2, 2, 2);
 
                 crosswordGrid.addView(cell, params);
@@ -372,14 +420,14 @@ public class WordOrderActivity extends Activity {
     }
 
     private void checkCrossword() {
-        char[][] solution = getSolution();
+        char[][] answer = solution();
 
         int correct = 0;
         int total = 0;
 
         for (int row = 0; row < 5; row++) {
             for (int column = 0; column < 5; column++) {
-                if (solution[row][column] == ' ') {
+                if (answer[row][column] == ' ') {
                     continue;
                 }
 
@@ -393,8 +441,8 @@ public class WordOrderActivity extends Activity {
 
                 boolean right =
                         value.length() > 0 &&
-                                value.charAt(0) ==
-                                        solution[row][column];
+                                value.charAt(0)
+                                        == answer[row][column];
 
                 if (right) {
                     correct++;
@@ -417,13 +465,18 @@ public class WordOrderActivity extends Activity {
             updateHeader();
 
             crosswordStatus.setText(
-                    "النتيجة: " + correct + " / " + total +
-                            " - المحاولات: " + Math.max(0, attempts)
+                    "النتيجة: " + correct +
+                            " / " + total +
+                            " - المحاولات: " +
+                            Math.max(0, attempts)
             );
 
             motivationText.setText(
-                    "اقتربت يا " + PLAYER +
+                    attempts > 0
+                            ? "اقتربت يا " + PLAYER +
                             "، راجع الحروف بهدوء"
+                            : "لا بأس يا " + PLAYER +
+                            "، ابدأ محاولة جديدة"
             );
 
             if (attempts <= 0) {
@@ -450,4 +503,32 @@ public class WordOrderActivity extends Activity {
                 "املأ الخانات - المحاولات: " + attempts
         );
     }
-            }
+
+    private GradientDrawable createBackground(
+            int fillColor,
+            int strokeColor,
+            int strokeWidth,
+            int radius
+    ) {
+        GradientDrawable drawable =
+                new GradientDrawable();
+
+        drawable.setColor(fillColor);
+        drawable.setStroke(
+                dp(strokeWidth),
+                strokeColor
+        );
+        drawable.setCornerRadius(dp(radius));
+
+        return drawable;
+    }
+
+    private int dp(int value) {
+        return Math.round(
+                value *
+                        getResources()
+                                .getDisplayMetrics()
+                                .density
+        );
+    }
+    } 
