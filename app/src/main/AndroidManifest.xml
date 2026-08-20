@@ -46,7 +46,6 @@
             android:exported="false"
             android:foregroundServiceType="mediaProjection" />
 
-        <!-- 🔥 FileProvider للكاميرا ولقطة الشاشة -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.fileprovider"
@@ -54,7 +53,7 @@
             android:grantUriPermissions="true">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
-                android:resource="@xml/file_paths" />
+                android:resource="@raw/file_paths" />   <!-- 🔥 تم التغيير إلى @raw -->
         </provider>
 
     </application>
