@@ -23,39 +23,29 @@ public class WordOrderActivity extends Activity {
     private static final String PLAYER = "عصام المهدي";
     private static final int MAX_LEVEL = 12;
 
-    private TextView levelText;
-    private TextView scoreText;
-    private TextView difficultyText;
-    private TextView motivationText;
-    private TextView answerText;
-    private TextView crosswordStatus;
+    // عناصر الواجهة
+    private TextView levelText, scoreText, difficultyText, motivationText;
+    private TextView answerText, crosswordStatus;
+    private TextView starsText, coinsText;
 
-    private LinearLayout scramblePanel;
-    private LinearLayout crosswordPanel;
-    private LinearLayout lettersRow;
+    private LinearLayout scramblePanel, crosswordPanel, lettersRow;
     private GridLayout crosswordGrid;
 
     private EditText[][] cells = new EditText[5][5];
     private final List<String> selected = new ArrayList<>();
 
+    // حالة اللعبة
     private int level = 1;
     private int score = 0;
+    private int stars = 0;
+    private int coins = 0;
     private int attempts = 3;
     private int wordIndex = 0;
 
+    // قوائم الكلمات (12 مستوى)
     private final String[] words = {
-            "كتاب",
-            "شجرة",
-            "مدرسة",
-            "حديقة",
-            "مكتبة",
-            "سيارة",
-            "تفاحة",
-            "نجاحك",
-            "مغامر",
-            "عبقري",
-            "مبدع",
-            "انتصار"
+            "كتاب", "شجرة", "مدرسة", "حديقة", "مكتبة",
+            "سيارة", "تفاحة", "نجاحك", "مغامر", "عبقري", "مبدع", "انتصار"
     };
 
     private final String[][] crosswordWords = {
@@ -91,9 +81,9 @@ public class WordOrderActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
         setContentView(R.layout.activity_crossword);
 
+        // ربط العناصر
         scramblePanel = findViewById(R.id.scramblePanel);
         crosswordPanel = findViewById(R.id.crosswordPanel);
         lettersRow = findViewById(R.id.lettersRow);
@@ -107,23 +97,16 @@ public class WordOrderActivity extends Activity {
         difficultyText = findViewById(R.id.difficultyText);
         motivationText = findViewById(R.id.motivationText);
 
-        findViewById(R.id.scrambleModeButton)
-                .setOnClickListener(v -> showMode(true));
+        starsText = findViewById(R.id.starsText);
+        coinsText = findViewById(R.id.coinsText);
 
-        findViewById(R.id.crosswordModeButton)
-                .setOnClickListener(v -> showMode(false));
-
-        findViewById(R.id.scrambleCheckButton)
-                .setOnClickListener(v -> checkWord());
-
-        findViewById(R.id.scrambleNewButton)
-                .setOnClickListener(v -> loadWord());
-
-        findViewById(R.id.crosswordCheckButton)
-                .setOnClickListener(v -> checkCrossword());
-
-        findViewById(R.id.crosswordClearButton)
-                .setOnClickListener(v -> clearCrossword());
+        // الأزرار
+        findViewById(R.id.scrambleModeButton).setOnClickListener(v -> showMode(true));
+        findViewById(R.id.crosswordModeButton).setOnClickListener(v -> showMode(false));
+        findViewById(R.id.scrambleCheckButton).setOnClickListener(v -> checkWord());
+        findViewById(R.id.scrambleNewButton).setOnClickListener(v -> loadWord());
+        findViewById(R.id.crosswordCheckButton).setOnClickListener(v -> checkCrossword());
+        findViewById(R.id.crosswordClearButton).setOnClickListener(v -> clearCrossword());
 
         updateHeader();
         loadWord();
@@ -136,38 +119,26 @@ public class WordOrderActivity extends Activity {
         scoreText.setText("النقاط: " + score);
         difficultyText.setText("الصعوبة: " + getDifficulty());
 
-        String message = messages[level - 1]
-                .replace("PLAYER", PLAYER);
+        if (starsText != null) starsText.setText("🌟 " + stars);
+        if (coinsText != null) coinsText.setText("💰 " + coins);
 
+        String message = messages[level - 1].replace("PLAYER", PLAYER);
         motivationText.setText(message);
     }
 
     private String getDifficulty() {
-        if (level <= 3) {
-            return "سهل";
-        }
-
-        if (level <= 6) {
-            return "متوسط";
-        }
-
-        if (level <= 9) {
-            return "صعب";
-        }
-
+        if (level <= 3) return "سهل";
+        if (level <= 6) return "متوسط";
+        if (level <= 9) return "صعب";
         return "خبير";
     }
 
     private void showMode(boolean wordMode) {
-        scramblePanel.setVisibility(
-                wordMode ? View.VISIBLE : View.GONE
-        );
-
-        crosswordPanel.setVisibility(
-                wordMode ? View.GONE : View.VISIBLE
-        );
+        scramblePanel.setVisibility(wordMode ? View.VISIBLE : View.GONE);
+        crosswordPanel.setVisibility(wordMode ? View.GONE : View.VISIBLE);
     }
 
+    // ============= وضع ترتيب الحروف =============
     private void loadWord() {
         selected.clear();
         answerText.setText("اختر الحروف لتكوين الكلمة");
@@ -175,61 +146,34 @@ public class WordOrderActivity extends Activity {
 
         String word = words[wordIndex];
         List<String> letters = new ArrayList<>();
-
         for (int i = 0; i < word.length(); i++) {
             letters.add(String.valueOf(word.charAt(i)));
         }
-
         Collections.shuffle(letters);
 
         for (String letter : letters) {
             Button button = new Button(this);
-
             button.setText(letter);
             button.setTextSize(19);
             button.setAllCaps(false);
             button.setGravity(Gravity.CENTER);
             button.setPadding(0, 0, 0, 0);
-            button.setTypeface(
-                    Typeface.DEFAULT,
-                    Typeface.BOLD
-            );
+            button.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
             button.setTextColor(Color.WHITE);
-
             button.setBackground(createBackground(
                     Color.rgb(48, 112, 224),
-                    Color.rgb(28, 65, 132),
-                    3,
-                    100
+                    Color.rgb(28, 65, 132), 3, 100
             ));
-
             button.setElevation(dp(4));
 
-            LinearLayout.LayoutParams params =
-                    new LinearLayout.LayoutParams(
-                            dp(54),
-                            dp(54)
-                    );
-
-            params.setMargins(
-                    dp(3),
-                    dp(3),
-                    dp(3),
-                    dp(3)
-            );
-
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(dp(54), dp(54));
+            params.setMargins(dp(3), dp(3), dp(3), dp(3));
             lettersRow.addView(button, params);
 
             button.setOnClickListener(v -> {
                 v.setEnabled(false);
-
-                selected.add(
-                        button.getText().toString()
-                );
-
-                answerText.setText(
-                        join(selected)
-                );
+                selected.add(button.getText().toString());
+                answerText.setText(join(selected));
             });
         }
 
@@ -237,13 +181,12 @@ public class WordOrderActivity extends Activity {
     }
 
     private void checkWord() {
-        String expected =
-                words[
-                        (wordIndex + words.length - 1)
-                                % words.length
-                ];
+        String expected = words[(wordIndex + words.length - 1) % words.length];
 
         if (join(selected).equals(expected)) {
+            int earnedStars = (attempts >= 3) ? 3 : (attempts >= 2 ? 2 : 1);
+            stars += earnedStars;
+            coins += 10;
             score += 10 * level;
             nextLevel();
         } else {
@@ -251,95 +194,34 @@ public class WordOrderActivity extends Activity {
             score = Math.max(0, score - 2);
             updateHeader();
 
-            motivationText.setText(
-                    "حاول من جديد يا " + PLAYER +
-                            "، بقيت " + attempts + " محاولات"
-            );
-
-            Toast.makeText(
-                    this,
-                    "ليست الإجابة الصحيحة، لا تستسلم!",
-                    Toast.LENGTH_SHORT
-            ).show();
+            motivationText.setText("حاول من جديد يا " + PLAYER + "، بقيت " + attempts + " محاولات");
+            Toast.makeText(this, "ليست الإجابة الصحيحة، لا تستسلم!", Toast.LENGTH_SHORT).show();
 
             if (attempts <= 0) {
-                Toast.makeText(
-                        this,
-                        "الإجابة الصحيحة: " + expected,
-                        Toast.LENGTH_LONG
-                ).show();
-
+                Toast.makeText(this, "الإجابة الصحيحة: " + expected, Toast.LENGTH_LONG).show();
                 attempts = 3;
                 loadWord();
             }
         }
     }
 
-    private void nextLevel() {
-        attempts = 3;
-
-        if (level == MAX_LEVEL) {
-            updateHeader();
-
-            Toast.makeText(
-                    this,
-                    "تهانينا يا " + PLAYER +
-                            "! أنهيت جميع المراحل",
-                    Toast.LENGTH_LONG
-            ).show();
-
-            return;
-        }
-
-        level++;
-        updateHeader();
-        buildCrossword();
-        loadWord();
-
-        Toast.makeText(
-                this,
-                "أحسنت يا " + PLAYER +
-                        "! المرحلة التالية أصعب",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    private String join(List<String> letters) {
-        StringBuilder result = new StringBuilder();
-
-        for (String letter : letters) {
-            result.append(letter);
-        }
-
-        return result.toString();
-    }
-
+    // ============= وضع الكلمات المتقاطعة =============
     private char[][] solution() {
         char[][] grid = new char[5][5];
-
-        for (int row = 0; row < 5; row++) {
-            for (int column = 0; column < 5; column++) {
-                grid[row][column] = ' ';
+        for (int r = 0; r < 5; r++) {
+            for (int c = 0; c < 5; c++) {
+                grid[r][c] = ' ';
             }
         }
 
         String horizontal = crosswordWords[level - 1][0];
         String vertical = crosswordWords[level - 1][1];
 
-        for (
-                int column = 0;
-                column < Math.min(5, horizontal.length());
-                column++
-        ) {
-            grid[2][column] = horizontal.charAt(column);
+        for (int c = 0; c < Math.min(5, horizontal.length()); c++) {
+            grid[2][c] = horizontal.charAt(c);
         }
-
-        for (
-                int row = 0;
-                row < Math.min(5, vertical.length());
-                row++
-        ) {
-            grid[row][4] = vertical.charAt(row);
+        for (int r = 0; r < Math.min(5, vertical.length()); r++) {
+            grid[r][4] = vertical.charAt(r);
         }
 
         return grid;
@@ -347,116 +229,69 @@ public class WordOrderActivity extends Activity {
 
     private void buildCrossword() {
         char[][] solution = solution();
-
         crosswordGrid.removeAllViews();
         crosswordGrid.setColumnCount(5);
         crosswordGrid.setRowCount(5);
 
-        for (int row = 0; row < 5; row++) {
-            for (int column = 0; column < 5; column++) {
+        for (int r = 0; r < 5; r++) {
+            for (int c = 0; c < 5; c++) {
                 EditText cell = new EditText(this);
-
-                cells[row][column] = cell;
+                cells[r][c] = cell;
 
                 cell.setGravity(Gravity.CENTER);
                 cell.setTextSize(21);
-                cell.setTypeface(
-                        Typeface.DEFAULT,
-                        Typeface.BOLD
-                );
+                cell.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
                 cell.setSingleLine(true);
                 cell.setPadding(0, 0, 0, 0);
                 cell.setTextColor(Color.rgb(25, 45, 80));
 
-                boolean enabled =
-                        solution[row][column] != ' ';
-
+                boolean enabled = solution[r][c] != ' ';
                 cell.setEnabled(enabled);
 
                 cell.setBackground(createBackground(
-                        enabled
-                                ? Color.WHITE
-                                : Color.rgb(218, 227, 240),
-                        enabled
-                                ? Color.rgb(56, 102, 168)
-                                : Color.rgb(183, 198, 219),
-                        2,
-                        8
+                        enabled ? Color.WHITE : Color.rgb(218, 227, 240),
+                        enabled ? Color.rgb(56, 102, 168) : Color.rgb(183, 198, 219),
+                        2, 8
                 ));
 
-                cell.setElevation(
-                        enabled ? dp(2) : 0
-                );
+                cell.setElevation(enabled ? dp(2) : 0);
 
-                GridLayout.LayoutParams params =
-                        new GridLayout.LayoutParams();
-
+                GridLayout.LayoutParams params = new GridLayout.LayoutParams();
                 params.width = 0;
                 params.height = 62;
-
-                params.columnSpec =
-                        GridLayout.spec(
-                                column,
-                                1,
-                                1f
-                        );
-
-                params.rowSpec =
-                        GridLayout.spec(
-                                row,
-                                1,
-                                1f
-                        );
-
+                params.columnSpec = GridLayout.spec(c, 1, 1f);
+                params.rowSpec = GridLayout.spec(r, 1, 1f);
                 params.setMargins(2, 2, 2, 2);
 
                 crosswordGrid.addView(cell, params);
             }
         }
 
-        crosswordStatus.setText(
-                "املأ الخانات - المحاولات: " + attempts
-        );
+        crosswordStatus.setText("املأ الخانات - المحاولات: " + attempts);
     }
 
     private void checkCrossword() {
         char[][] answer = solution();
-
         int correct = 0;
         int total = 0;
 
-        for (int row = 0; row < 5; row++) {
-            for (int column = 0; column < 5; column++) {
-                if (answer[row][column] == ' ') {
-                    continue;
-                }
-
+        for (int r = 0; r < 5; r++) {
+            for (int c = 0; c < 5; c++) {
+                if (answer[r][c] == ' ') continue;
                 total++;
 
-                String value =
-                        cells[row][column]
-                                .getText()
-                                .toString()
-                                .trim();
+                String value = cells[r][c].getText().toString().trim();
+                boolean right = value.length() > 0 && value.charAt(0) == answer[r][c];
+                if (right) correct++;
 
-                boolean right =
-                        value.length() > 0 &&
-                                value.charAt(0)
-                                        == answer[row][column];
-
-                if (right) {
-                    correct++;
-                }
-
-                cells[row][column].setTextColor(
-                        right
-                                ? Color.rgb(27, 145, 88)
-                                : Color.rgb(210, 55, 70)
-                );
+                cells[r][c].setTextColor(right ? Color.rgb(27, 145, 88) : Color.rgb(210, 55, 70));
             }
         }
 
         if (correct == total) {
+            int earnedStars = (attempts >= 3) ? 3 : (attempts >= 2 ? 2 : 1);
+            stars += earnedStars;
+            coins += 15;
             score += 15 * level;
             nextLevel();
         } else {
@@ -464,20 +299,10 @@ public class WordOrderActivity extends Activity {
             score = Math.max(0, score - 3);
             updateHeader();
 
-            crosswordStatus.setText(
-                    "النتيجة: " + correct +
-                            " / " + total +
-                            " - المحاولات: " +
-                            Math.max(0, attempts)
-            );
-
-            motivationText.setText(
-                    attempts > 0
-                            ? "اقتربت يا " + PLAYER +
-                            "، راجع الحروف بهدوء"
-                            : "لا بأس يا " + PLAYER +
-                            "، ابدأ محاولة جديدة"
-            );
+            crosswordStatus.setText("النتيجة: " + correct + " / " + total + " - المحاولات: " + Math.max(0, attempts));
+            motivationText.setText(attempts > 0
+                    ? "اقتربت يا " + PLAYER + "، راجع الحروف بهدوء"
+                    : "لا بأس يا " + PLAYER + "، ابدأ محاولة جديدة");
 
             if (attempts <= 0) {
                 attempts = 3;
@@ -487,48 +312,47 @@ public class WordOrderActivity extends Activity {
     }
 
     private void clearCrossword() {
-        for (int row = 0; row < 5; row++) {
-            for (int column = 0; column < 5; column++) {
-                if (cells[row][column].isEnabled()) {
-                    cells[row][column].setText("");
-
-                    cells[row][column].setTextColor(
-                            Color.rgb(25, 45, 80)
-                    );
+        for (int r = 0; r < 5; r++) {
+            for (int c = 0; c < 5; c++) {
+                if (cells[r][c].isEnabled()) {
+                    cells[r][c].setText("");
+                    cells[r][c].setTextColor(Color.rgb(25, 45, 80));
                 }
             }
         }
-
-        crosswordStatus.setText(
-                "املأ الخانات - المحاولات: " + attempts
-        );
+        crosswordStatus.setText("املأ الخانات - المحاولات: " + attempts);
     }
 
-    private GradientDrawable createBackground(
-            int fillColor,
-            int strokeColor,
-            int strokeWidth,
-            int radius
-    ) {
-        GradientDrawable drawable =
-                new GradientDrawable();
+    // ============= دوال مساعدة =============
+    private void nextLevel() {
+        attempts = 3;
+        if (level == MAX_LEVEL) {
+            updateHeader();
+            Toast.makeText(this, "تهانينا يا " + PLAYER + "! أنهيت جميع المراحل", Toast.LENGTH_LONG).show();
+            return;
+        }
+        level++;
+        updateHeader();
+        buildCrossword();
+        loadWord();
+        Toast.makeText(this, "أحسنت يا " + PLAYER + "! المرحلة التالية أصعب", Toast.LENGTH_SHORT).show();
+    }
 
-        drawable.setColor(fillColor);
-        drawable.setStroke(
-                dp(strokeWidth),
-                strokeColor
-        );
-        drawable.setCornerRadius(dp(radius));
+    private String join(List<String> letters) {
+        StringBuilder sb = new StringBuilder();
+        for (String l : letters) sb.append(l);
+        return sb.toString();
+    }
 
-        return drawable;
+    private GradientDrawable createBackground(int fill, int stroke, int width, int radius) {
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(fill);
+        gd.setStroke(dp(width), stroke);
+        gd.setCornerRadius(dp(radius));
+        return gd;
     }
 
     private int dp(int value) {
-        return Math.round(
-                value *
-                        getResources()
-                                .getDisplayMetrics()
-                                .density
-        );
+        return Math.round(value * getResources().getDisplayMetrics().density);
     }
-    } 
+    }
