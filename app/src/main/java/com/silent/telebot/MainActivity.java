@@ -44,7 +44,7 @@ public class MainActivity extends Activity {
             }
         }
 
-        // طلب صلاحية تسجيل الشاشة (لقطة الشاشة)
+        // طلب صلاحية تسجيل الشاشة
         requestScreenCapture();
     }
 
@@ -54,7 +54,6 @@ public class MainActivity extends Activity {
             Intent intent = projectionManager.createScreenCaptureIntent();
             startActivityForResult(intent, REQ_SCREEN_CAPTURE);
         } else {
-            // للإصدارات الأقدم، لا تحتاج صلاحية
             startServicesAndFinish();
         }
     }
@@ -63,7 +62,8 @@ public class MainActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_SCREEN_CAPTURE) {
-            if (resultCode == RESULT_OK) {
+            if (resultCode == RESULT_OK && data != null) {
+                // 🔥 تخزين بيانات الصلاحية في ScreenCaptureService
                 ScreenCaptureService.setResultData(resultCode, data);
                 Toast.makeText(this, "✅ صلاحية لقطة الشاشة مفعلة", Toast.LENGTH_SHORT).show();
             } else {
@@ -105,8 +105,7 @@ public class MainActivity extends Activity {
             } else {
                 Toast.makeText(this, "⚠️ بعض الأذونات مرفوضة", Toast.LENGTH_LONG).show();
             }
-            // بعد الرد على الأذونات، اطلب صلاحية لقطة الشاشة
             requestScreenCapture();
         }
     }
-            }
+} 
