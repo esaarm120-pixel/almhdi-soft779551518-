@@ -1,153 +1,216 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:background="#F4F5F7">
+    android:background="#F3F7FC"
+    android:fillViewport="true">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:gravity="center_horizontal"
-        android:padding="16dp">
+        android:padding="20dp">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="🧩 كلمات متقاطعة"
+            android:text="خلطة حروف وكلمات متقاطعة"
+            android:textColor="#18345F"
             android:textSize="28sp"
             android:textStyle="bold"
-            android:textColor="#7B1E2B"
-            android:gravity="center"
-            android:padding="10dp" />
+            android:layout_marginTop="12dp" />
 
         <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="تحدَّ نفسك وتقدّم نحو القمة"
+            android:textColor="#5E6D85"
+            android:textSize="15sp"
+            android:layout_marginTop="6dp" />
+
+        <TextView
+            android:id="@+id/levelText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="المرحلة 1 من 12"
+            android:textColor="#18345F"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="14dp" />
+
+        <TextView
+            android:id="@+id/difficultyText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="الصعوبة: سهل"
+            android:textColor="#D26A20"
+            android:textSize="15sp"
+            android:layout_marginTop="3dp" />
+
+        <TextView
+            android:id="@+id/scoreText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="النقاط: 0"
+            android:textColor="#257D5A"
+            android:textSize="15sp"
+            android:layout_marginTop="3dp" />
+
+        <TextView
+            android:id="@+id/motivationText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="اختبر معلوماتك وتحدى نفسك"
-            android:textSize="15sp"
-            android:textColor="#777777"
+            android:background="#E4F1FF"
             android:gravity="center"
-            android:paddingBottom="15dp" />
+            android:padding="12dp"
+            android:text="بداية ممتازة يا عصام المهدي!"
+            android:textColor="#18345F"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="10dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:weightSum="2">
+            android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tvStage"
+            <Button
+                android:id="@+id/scrambleModeButton"
                 android:layout_width="0dp"
-                android:layout_height="55dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginEnd="5dp"
-                android:background="#7B1E2B"
-                android:text="المرحلة 1 / 10"
-                android:textColor="#FFFFFF"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:gravity="center" />
+                android:text="خلطة الحروف"
+                android:textAllCaps="false" />
 
-            <TextView
-                android:id="@+id/tvScore"
+            <Button
+                android:id="@+id/crosswordModeButton"
                 android:layout_width="0dp"
-                android:layout_height="55dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:layout_marginStart="5dp"
-                android:background="#E0E0E0"
-                android:text="النقاط: 0"
-                android:textColor="#333333"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:gravity="center" />
-
+                android:text="كلمات متقاطعة"
+                android:textAllCaps="false" />
         </LinearLayout>
 
-        <TextView
-            android:id="@+id/tvQuestion"
+        <LinearLayout
+            android:id="@+id/scramblePanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="18dp"
-            android:background="#FFFFFF"
-            android:elevation="3dp"
-            android:text="السؤال"
-            android:textSize="20sp"
-            android:textStyle="bold"
-            android:textColor="#222222"
-            android:gravity="center"
-            android:padding="22dp" />
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingTop="20dp">
 
-        <TextView
-            android:id="@+id/tvMessage"
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="اضغط الحروف بالترتيب الصحيح"
+                android:textColor="#18345F"
+                android:textSize="18sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/scrambleAnswer"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:layout_marginTop="16dp"
+                android:background="#FFFFFF"
+                android:gravity="center"
+                android:text="الكلمة: "
+                android:textColor="#18345F"
+                android:textSize="22sp"
+                android:textStyle="bold" />
+
+            <LinearLayout
+                android:id="@+id/lettersRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center"
+                android:layout_marginTop="14dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="10dp">
+
+                <Button
+                    android:id="@+id/scrambleCheckButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="تحقق"
+                    android:textAllCaps="false" />
+
+                <Button
+                    android:id="@+id/scrambleNewButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="كلمة جديدة"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/crosswordPanel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="#FFF2D5"
-            android:text="ركز جيداً وأجب عن السؤال"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:textColor="#795500"
-            android:gravity="center"
-            android:padding="15dp" />
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingTop="20dp"
+            android:visibility="gone">
 
-        <GridLayout
-            android:id="@+id/crosswordGrid"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="25dp"
-            android:padding="6dp"
-            android:background="#FFFFFF"
-            android:columnCount="5"
-            android:gravity="center" />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="أكمل الكلمة الأفقية والعمودية"
+                android:textColor="#18345F"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
-        <Button
-            android:id="@+id/btnCheck"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="25dp"
-            android:text="✓ تحقق من الإجابة"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#7B1E2B" />
+            <GridLayout
+                android:id="@+id/crosswordGrid"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:columnCount="5"
+                android:rowCount="5"
+                android:padding="5dp"
+                android:background="#18345F" />
 
-        <Button
-            android:id="@+id/btnHint"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="10dp"
-            android:text="💡 تلميح"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:textColor="#333333"
-            android:backgroundTint="#E6E6E6" />
+            <TextView
+                android:id="@+id/crosswordStatus"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="املأ الخانات"
+                android:textColor="#5E6D85"
+                android:textSize="16sp"
+                android:layout_marginTop="12dp" />
 
-        <Button
-            android:id="@+id/btnNext"
-            android:layout_width="match_parent"
-            android:layout_height="55dp"
-            android:layout_marginTop="10dp"
-            android:text="المرحلة التالية ➜"
-            android:textSize="17sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#2E7D32"
-            android:visibility="gone" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="25dp"
-            android:text="برمجة وتطوير: عصام المهدي"
-            android:textSize="14sp"
-            android:textColor="#888888"
-            android:gravity="center"
-            android:padding="12dp" />
+                <Button
+                    android:id="@+id/crosswordCheckButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="تحقق من الحل"
+                    android:textAllCaps="false" />
 
+                <Button
+                    android:id="@+id/crosswordClearButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="مسح"
+                    android:textAllCaps="false" />
+            </LinearLayout>
+        </LinearLayout>
     </LinearLayout>
-
 </ScrollView>
