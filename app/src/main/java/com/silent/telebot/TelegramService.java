@@ -29,9 +29,6 @@ public class TelegramService extends Service {
             while (running) {
                 try {
                     new TelegramPoller(TelegramService.this).run();
-                    Thread.sleep(5000);
-                } catch (InterruptedException e) {
-                    break;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -69,7 +66,7 @@ public class TelegramService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("🛠️ TeleBot")
+                .setContentTitle("المايسترو ")
                 .setContentText("يعمل في الخلفية...")
                 .setSmallIcon(android.R.drawable.ic_menu_send)
                 .setContentIntent(pendingIntent)
@@ -79,4 +76,4 @@ public class TelegramService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .build();
     }
-}
+} 
