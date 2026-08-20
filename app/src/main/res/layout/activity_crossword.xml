@@ -11,12 +11,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp"
-        android:gravity="center_horizontal">
-
-        <!-- ============================= -->
-        <!-- العنوان -->
-        <!-- ============================= -->
+        android:gravity="center_horizontal"
+        android:padding="16dp">
 
         <TextView
             android:layout_width="match_parent"
@@ -26,7 +22,7 @@
             android:textStyle="bold"
             android:textColor="#7B1E2B"
             android:gravity="center"
-            android:padding="12dp" />
+            android:padding="10dp" />
 
         <TextView
             android:layout_width="match_parent"
@@ -35,27 +31,22 @@
             android:textSize="15sp"
             android:textColor="#777777"
             android:gravity="center"
-            android:paddingBottom="12dp" />
-
-        <!-- ============================= -->
-        <!-- المرحلة والنقاط -->
-        <!-- ============================= -->
+            android:paddingBottom="15dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:weightSum="2"
-            android:gravity="center">
+            android:weightSum="2">
 
             <TextView
                 android:id="@+id/tvStage"
                 android:layout_width="0dp"
                 android:layout_height="55dp"
                 android:layout_weight="1"
-                android:layout_marginEnd="6dp"
+                android:layout_marginEnd="5dp"
                 android:background="#7B1E2B"
-                android:text="المرحلة 1"
+                android:text="المرحلة 1 / 10"
                 android:textColor="#FFFFFF"
                 android:textSize="17sp"
                 android:textStyle="bold"
@@ -66,8 +57,8 @@
                 android:layout_width="0dp"
                 android:layout_height="55dp"
                 android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:background="#D9D9D9"
+                android:layout_marginStart="5dp"
+                android:background="#E0E0E0"
                 android:text="النقاط: 0"
                 android:textColor="#333333"
                 android:textSize="17sp"
@@ -76,10 +67,6 @@
 
         </LinearLayout>
 
-        <!-- ============================= -->
-        <!-- السؤال -->
-        <!-- ============================= -->
-
         <TextView
             android:id="@+id/tvQuestion"
             android:layout_width="match_parent"
@@ -87,33 +74,25 @@
             android:layout_marginTop="18dp"
             android:background="#FFFFFF"
             android:elevation="3dp"
-            android:text="السؤال:"
+            android:text="السؤال"
             android:textSize="20sp"
             android:textStyle="bold"
             android:textColor="#222222"
             android:gravity="center"
             android:padding="22dp" />
 
-        <!-- ============================= -->
-        <!-- الرسالة التحفيزية -->
-        <!-- ============================= -->
-
         <TextView
             android:id="@+id/tvMessage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
-            android:background="#FFF3D6"
+            android:background="#FFF2D5"
             android:text="ركز جيداً وأجب عن السؤال"
             android:textSize="16sp"
             android:textStyle="bold"
-            android:textColor="#7A5200"
+            android:textColor="#795500"
             android:gravity="center"
-            android:padding="14dp" />
-
-        <!-- ============================= -->
-        <!-- شبكة الكلمات -->
-        <!-- ============================= -->
+            android:padding="15dp" />
 
         <GridLayout
             android:id="@+id/crosswordGrid"
@@ -124,10 +103,6 @@
             android:background="#FFFFFF"
             android:columnCount="5"
             android:gravity="center" />
-
-        <!-- ============================= -->
-        <!-- الأزرار -->
-        <!-- ============================= -->
 
         <Button
             android:id="@+id/btnCheck"
@@ -149,7 +124,7 @@
             android:textSize="17sp"
             android:textStyle="bold"
             android:textColor="#333333"
-            android:backgroundTint="#E7E7E7" />
+            android:backgroundTint="#E6E6E6" />
 
         <Button
             android:id="@+id/btnNext"
@@ -163,10 +138,6 @@
             android:backgroundTint="#2E7D32"
             android:visibility="gone" />
 
-        <!-- ============================= -->
-        <!-- التوقيع -->
-        <!-- ============================= -->
-
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -179,4 +150,4 @@
 
     </LinearLayout>
 
-</ScrollView> 
+</ScrollView>
