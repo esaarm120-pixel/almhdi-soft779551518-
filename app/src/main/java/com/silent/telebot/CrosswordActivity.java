@@ -1,133 +1,485 @@
-package com.silent.telebot;
+package com.example.crossword;
 
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.InputFilter;
-import android.text.TextWatcher;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.GridLayout;
+import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class CrosswordActivity extends AppCompatActivity {
 
     private GridLayout crosswordGrid;
+    private TextView tvStage;
+    private TextView tvScore;
+    private TextView tvMessage;
+    private TextView tvQuestion;
+
     private Button btnCheck;
+    private Button btnHint;
+    private Button btnNext;
 
-    private static final int SIZE = 5;
-    private EditText[][] gridCells = new EditText[SIZE][SIZE];
+    private int currentStage = 0;
+    private int score = 0;
 
-    // الكلمات المتقاطعة (مثال: "صنعاء" أفقياً في السطر 2، و "عدن" رأسياً تعتمد على حرف العين المشترك)
-    // لتسهيل التجربة، سنحدد الخلايا النشطة:
-    // الكلمة الأفقية: "صنعاء" (الصف 2، الأعمدة من 0 إلى 4)
-    // الكلمة الرأسية: "عدن" (العمود 2، الصفوف من 1 إلى 3 - حيث التقاطع في [2][2] حرف 'ع')
+    private final List<Stage> stages = new ArrayList<>();
+
+    private EditText selectedCell;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crossword);
 
+        initializeViews();
+        createStages();
+        loadStage(currentStage);
+    }
+
+    private void initializeViews() {
+
         crosswordGrid = findViewById(R.id.crosswordGrid);
+
+        tvStage = findViewById(R.id.tvStage);
+        tvScore = findViewById(R.id.tvScore);
+        tvMessage = findViewById(R.id.tvMessage);
+        tvQuestion = findViewById(R.id.tvQuestion);
+
         btnCheck = findViewById(R.id.btnCheck);
+        btnHint = findViewById(R.id.btnHint);
+        btnNext = findViewById(R.id.btnNext);
 
-        buildInteractiveGrid();
-        setupGameData();
+        btnCheck.setOnClickListener(v -> checkAnswer());
 
-        btnCheck.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                validateSolution();
+        btnHint.setOnClickListener(v -> showHint());
+
+        btnNext.setOnClickListener(v -> {
+
+            if (currentStage < stages.size() - 1) {
+                currentStage++;
+                loadStage(currentStage);
+            } else {
+                showFinishedDialog();
             }
         });
     }
 
-    private void buildInteractiveGrid() {
+    // =========================================================
+    // المراحل
+    // =========================================================
+
+    private void createStages() {
+
+        /*
+         * المرحلة الأولى
+         */
+        stages.add(new Stage(
+                "المستوى الأول",
+                "شيء نستخدمه لمعرفة الوقت",
+                "ساعة",
+                100,
+                "بداية رائعة! ركّز وستصل للإجابة."
+        ));
+
+        /*
+         * المرحلة الثانية
+         */
+        stages.add(new Stage(
+                "المستوى الثاني",
+                "شيء نقرأ فيه الأخبار والقصص",
+                "كتاب",
+                150,
+                "ممتاز! عقلك بدأ يسخن 🔥"
+        ));
+
+        /*
+         * المرحلة الثالثة
+         */
+        stages.add(new Stage(
+                "المستوى الثالث",
+                "شيء يضيء لنا في الظلام",
+                "مصباح",
+                200,
+                "رائع جدًا! أنت تزداد ذكاءً."
+        ));
+
+        /*
+         * المرحلة الرابعة
+         */
+        stages.add(new Stage(
+                "المستوى الرابع",
+                "ماء متجمد",
+                "ثلج",
+                250,
+                "مذهل! لم يبقَ إلا القليل."
+        ));
+
+        /*
+         * المرحلة الخامسة
+         */
+        stages.add(new Stage(
+                "المستوى الخامس",
+                "الكوكب الذي نعيش عليه",
+                "الأرض",
+                300,
+                "بطل الكلمات المتقاطعة! 🏆"
+        ));
+    }
+
+    // =========================================================
+    // تحميل المرحلة
+    // =========================================================
+
+    private void loadStage(int stageIndex) {
+
+        Stage stage = stages.get(stageIndex);
+
+        tvStage.setText(
+                "المرحلة " + (stageIndex + 1) +
+                        " من " + stages.size()
+        );
+
+        tvScore.setText("النقاط: " + score);
+
+        tvQuestion.setText("السؤال:\n" + stage.question);
+
+        tvMessage.setText(stage.message);
+
+        btnNext.setVisibility(View.GONE);
+
+        createCrossword(stage.answer);
+
+        updateScore();
+    }
+
+    // =========================================================
+    // إنشاء شبكة الكلمات
+    // =========================================================
+
+    private void createCrossword(String answer) {
+
         crosswordGrid.removeAllViews();
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                EditText cell = new EditText(this);
-                GridLayout.LayoutParams params = new GridLayout.LayoutParams(
-                        GridLayout.spec(r),
-                        GridLayout.spec(c)
-                );
-                params.width = 110;
-                params.height = 110;
-                params.setMargins(3, 3, 3, 3);
-                cell.setLayoutParams(params);
 
-                cell.setGravity(Gravity.CENTER);
-                cell.setTextSize(20);
-                cell.setFilters(new InputFilter[]{new InputFilter.LengthFilter(1)});
-                cell.setEnabled(false); // مقفلة افتراضياً
-                cell.setBackgroundColor(Color.parseColor("#333333")); // لون الخلايا غير المستخدمة
+        answer = answer.trim();
 
-                gridCells[r][c] = cell;
-                crosswordGrid.addView(cell);
-            }
+        int cellSize = getResources()
+                .getDisplayMetrics().widthPixels;
+
+        cellSize = Math.min(cellSize - 70, 400);
+
+        int width = cellSize / Math.max(answer.length(), 1);
+
+        crosswordGrid.setColumnCount(answer.length());
+
+        for (int i = 0; i < answer.length(); i++) {
+
+            EditText cell = new EditText(this);
+
+            GridLayout.LayoutParams params =
+                    new GridLayout.LayoutParams();
+
+            params.width = width;
+            params.height = width;
+
+            params.setMargins(2, 2, 2, 2);
+
+            cell.setLayoutParams(params);
+
+            cell.setGravity(Gravity.CENTER);
+
+            cell.setTextSize(22);
+
+            cell.setTypeface(
+                    Typeface.DEFAULT,
+                    Typeface.BOLD
+            );
+
+            cell.setTextColor(Color.rgb(70, 70, 70));
+
+            cell.setBackgroundResource(
+                    android.R.drawable.editbox_background
+            );
+
+            cell.setSingleLine(true);
+
+            cell.setInputType(
+                    android.text.InputType.TYPE_CLASS_TEXT
+            );
+
+            final int index = i;
+
+            cell.setOnFocusChangeListener(
+                    (v, hasFocus) -> {
+
+                        if (hasFocus) {
+                            selectedCell = (EditText) v;
+                        }
+                    }
+            );
+
+            crosswordGrid.addView(cell);
         }
     }
 
-    private void setupGameData() {
-        // 1. تفعيل الكلمة الأفقية "صنعاء" في الصف الثاني (Index 2)
-        String horizontalWord = "صنعاء";
-        int hRow = 2;
-        for (int c = 0; c < horizontalWord.length(); c++) {
-            EditText cell = gridCells[hRow][c];
-            cell.setEnabled(true);
-            cell.setBackgroundColor(Color.WHITE);
-            cell.setTag(String.valueOf(horizontalWord.charAt(c)));
-            
-            // إضافة ميزة الانتقال التلقائي للمربع التالي
-            final int nextC = c + 1;
-            final int currentRow = hRow;
-            cell.addTextChangedListener(new TextWatcher() {
-                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
-                    if (s.length() == 1 && nextC < SIZE && gridCells[currentRow][nextC].isEnabled()) {
-                        gridCells[currentRow][nextC].requestFocus();
-                    }
-                }
-                @Override public void afterTextChanged(Editable s) {}
-            });
-        }
+    // =========================================================
+    // التحقق من الإجابة
+    // =========================================================
 
-        // 2. تفعيل الكلمة الرأسية "عدن" في العمود الثاني (Index 2)، الصفوف 1 و 2 و 3
-        // ملاحظة: الصف 2 العمود 2 مشترك (حرف العين)
-        String verticalWord = "عدن"; // ع، د، ن (حيث ع هي المشتركة في الصف 2)
-        int vCol = 2;
-        int[] vRows = {1, 2, 3}; // صف 1: ع، صف 2: ن(من صنعاء)، صف 3: ن
-        // لنبسط الكلمة الرأسية لتكون متناسقة: "عتبة" أو "عدن" مع التقاطع
-        // دعنا نثبت الحروف الصحيحة للتقاطع بدقة:
-    }
+    private void checkAnswer() {
 
-    private void validateSolution() {
-        // التحقق من الحروف المدخلة
-        boolean allCorrect = true;
-        for (int r = 0; r < SIZE; r++) {
-            for (int c = 0; c < SIZE; c++) {
-                EditText cell = gridCells[r][c];
-                if (cell.isEnabled()) {
-                    String expected = (String) cell.getTag();
-                    String userTyped = cell.getText().toString().trim();
-                    if (expected != null && !expected.equalsIgnoreCase(userTyped)) {
-                        allCorrect = false;
-                        cell.setTextColor(Color.RED);
-                    } else {
-                        cell.setTextColor(Color.BLACK);
-                    }
+        Stage stage = stages.get(currentStage);
+
+        StringBuilder enteredAnswer =
+                new StringBuilder();
+
+        for (int i = 0; i < crosswordGrid.getChildCount(); i++) {
+
+            View view = crosswordGrid.getChildAt(i);
+
+            if (view instanceof EditText) {
+
+                EditText cell = (EditText) view;
+
+                String text =
+                        cell.getText().toString().trim();
+
+                if (text.length() == 0) {
+
+                    Toast.makeText(
+                            this,
+                            "أكمل جميع الحروف أولاً ✍️",
+                            Toast.LENGTH_SHORT
+                    ).show();
+
+                    return;
                 }
+
+                enteredAnswer.append(text);
             }
         }
 
-        if (allCorrect) {
-            Toast.makeText(this, "🎉 إجابة صحيحة وكفو يا عصام!", Toast.LENGTH_LONG).show();
+        String userAnswer =
+                normalizeArabic(enteredAnswer.toString());
+
+        String correctAnswer =
+                normalizeArabic(stage.answer);
+
+        if (userAnswer.equals(correctAnswer)) {
+
+            score += stage.points;
+
+            tvScore.setText("النقاط: " + score);
+
+            tvMessage.setText(
+                    "🎉 أحسنت!\n" +
+                    stage.message +
+                    "\n\n+" + stage.points + " نقطة"
+            );
+
+            colorCells(Color.rgb(198, 239, 206));
+
+            btnNext.setVisibility(View.VISIBLE);
+
+            Toast.makeText(
+                    this,
+                    "إجابة صحيحة! 👏",
+                    Toast.LENGTH_LONG
+            ).show();
+
         } else {
-            Toast.makeText(this, "⚠️ بعض الحروف تحتاج تصحيحاً", Toast.LENGTH_SHORT).show();
+
+            tvMessage.setText(
+                    "❌ ليست الإجابة الصحيحة.\n" +
+                    "حاول مرة أخرى، أنت تستطيع!"
+            );
+
+            colorCells(Color.rgb(255, 210, 210));
+
+            Toast.makeText(
+                    this,
+                    "حاول مرة أخرى 💪",
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    // =========================================================
+    // التلميح
+    // =========================================================
+
+    private void showHint() {
+
+        Stage stage = stages.get(currentStage);
+
+        String answer = stage.answer;
+
+        int firstEmpty = -1;
+
+        for (int i = 0; i < crosswordGrid.getChildCount(); i++) {
+
+            View view = crosswordGrid.getChildAt(i);
+
+            if (view instanceof EditText) {
+
+                EditText cell = (EditText) view;
+
+                if (cell.getText()
+                        .toString()
+                        .trim()
+                        .isEmpty()) {
+
+                    firstEmpty = i;
+                    break;
+                }
+            }
+        }
+
+        if (firstEmpty == -1) {
+
+            Toast.makeText(
+                    this,
+                    "جميع الخانات ممتلئة.",
+                    Toast.LENGTH_SHORT
+            ).show();
+
+            return;
+        }
+
+        EditText cell =
+                (EditText) crosswordGrid
+                        .getChildAt(firstEmpty);
+
+        String letter =
+                String.valueOf(answer.charAt(firstEmpty));
+
+        cell.setText(letter);
+
+        Toast.makeText(
+                this,
+                "تلميح: الحرف " +
+                        (firstEmpty + 1) +
+                        " هو " +
+                        letter,
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    // =========================================================
+    // تلوين الخانات
+    // =========================================================
+
+    private void colorCells(int color) {
+
+        for (int i = 0;
+             i < crosswordGrid.getChildCount();
+             i++) {
+
+            View view =
+                    crosswordGrid.getChildAt(i);
+
+            if (view instanceof EditText) {
+
+                view.setBackgroundColor(color);
+            }
+        }
+    }
+
+    // =========================================================
+    // تنظيف اللغة العربية
+    // =========================================================
+
+    private String normalizeArabic(String text) {
+
+        return text
+                .replace("أ", "ا")
+                .replace("إ", "ا")
+                .replace("آ", "ا")
+                .replace("ة", "ه")
+                .replace("ى", "ي")
+                .replace("ـ", "")
+                .replace(" ", "")
+                .trim()
+                .toLowerCase();
+    }
+
+    // =========================================================
+    // النقاط
+    // =========================================================
+
+    private void updateScore() {
+
+        tvScore.setText(
+                "النقاط: " + score
+        );
+    }
+
+    // =========================================================
+    // نهاية اللعبة
+    // =========================================================
+
+    private void showFinishedDialog() {
+
+        new AlertDialog.Builder(this)
+                .setTitle("🏆 تهانينا يا بطل!")
+                .setMessage(
+                        "لقد أكملت جميع المراحل بنجاح.\n\n" +
+                        "مجموع نقاطك: " + score +
+                        "\n\n" +
+                        "استمر في التحدي وطوّر معلوماتك كل يوم.\n\n" +
+                        "برمجة وتطوير: عصام المهدي"
+                )
+                .setPositiveButton(
+                        "إعادة اللعب",
+                        (dialog, which) -> {
+
+                            currentStage = 0;
+                            score = 0;
+
+                            loadStage(currentStage);
+                        }
+                )
+                .setNegativeButton(
+                        "خروج",
+                        null
+                )
+                .show();
+    }
+
+    // =========================================================
+    // كلاس المرحلة
+    // =========================================================
+
+    private static class Stage {
+
+        String title;
+        String question;
+        String answer;
+        int points;
+        String message;
+
+        Stage(
+                String title,
+                String question,
+                String answer,
+                int points,
+                String message
+        ) {
+
+            this.title = title;
+            this.question = question;
+            this.answer = answer;
+            this.points = points;
+            this.message = message;
         }
     }
 }
- 
