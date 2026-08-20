@@ -1,63 +1,182 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#121212"
-    android:padding="16dp"
-    android:gravity="center_horizontal">
+    android:fillViewport="true"
+    android:background="#F4F5F7">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="التحدي الاحترافي - كلمات متقاطعة"
-        android:textSize="20sp"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
-        android:layout_marginBottom="10dp"/>
-
-    <!-- لوحة الأسئلة والتلميحات -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:background="#1E1E1E"
-        android:padding="10dp"
-        android:layout_marginBottom="20dp">
-        
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="1️⃣ أفقي: عاصمة اليمن التاريخية (5 حروف)"
-            android:textColor="#FFEB3B"
-            android:textSize="14sp"
-            android:layout_marginBottom="4dp"/>
+        android:padding="16dp"
+        android:gravity="center_horizontal">
+
+        <!-- ============================= -->
+        <!-- العنوان -->
+        <!-- ============================= -->
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🧩 كلمات متقاطعة"
+            android:textSize="28sp"
+            android:textStyle="bold"
+            android:textColor="#7B1E2B"
+            android:gravity="center"
+            android:padding="12dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="اختبر معلوماتك وتحدى نفسك"
+            android:textSize="15sp"
+            android:textColor="#777777"
+            android:gravity="center"
+            android:paddingBottom="12dp" />
+
+        <!-- ============================= -->
+        <!-- المرحلة والنقاط -->
+        <!-- ============================= -->
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:gravity="center">
+
+            <TextView
+                android:id="@+id/tvStage"
+                android:layout_width="0dp"
+                android:layout_height="55dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="6dp"
+                android:background="#7B1E2B"
+                android:text="المرحلة 1"
+                android:textColor="#FFFFFF"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+            <TextView
+                android:id="@+id/tvScore"
+                android:layout_width="0dp"
+                android:layout_height="55dp"
+                android:layout_weight="1"
+                android:layout_marginStart="6dp"
+                android:background="#D9D9D9"
+                android:text="النقاط: 0"
+                android:textColor="#333333"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:gravity="center" />
+
+        </LinearLayout>
+
+        <!-- ============================= -->
+        <!-- السؤال -->
+        <!-- ============================= -->
+
+        <TextView
+            android:id="@+id/tvQuestion"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="18dp"
+            android:background="#FFFFFF"
+            android:elevation="3dp"
+            android:text="السؤال:"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#222222"
+            android:gravity="center"
+            android:padding="22dp" />
+
+        <!-- ============================= -->
+        <!-- الرسالة التحفيزية -->
+        <!-- ============================= -->
+
+        <TextView
+            android:id="@+id/tvMessage"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="#FFF3D6"
+            android:text="ركز جيداً وأجب عن السؤال"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#7A5200"
+            android:gravity="center"
+            android:padding="14dp" />
+
+        <!-- ============================= -->
+        <!-- شبكة الكلمات -->
+        <!-- ============================= -->
+
+        <GridLayout
+            android:id="@+id/crosswordGrid"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="2️⃣ رأسي: مدينة تجارية يمنية ساحلية (4 حروف)"
-            android:textColor="#03A9F4"
-            android:textSize="14sp"/>
+            android:layout_marginTop="25dp"
+            android:padding="6dp"
+            android:background="#FFFFFF"
+            android:columnCount="5"
+            android:gravity="center" />
+
+        <!-- ============================= -->
+        <!-- الأزرار -->
+        <!-- ============================= -->
+
+        <Button
+            android:id="@+id/btnCheck"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="25dp"
+            android:text="✓ تحقق من الإجابة"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#7B1E2B" />
+
+        <Button
+            android:id="@+id/btnHint"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="10dp"
+            android:text="💡 تلميح"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#333333"
+            android:backgroundTint="#E7E7E7" />
+
+        <Button
+            android:id="@+id/btnNext"
+            android:layout_width="match_parent"
+            android:layout_height="55dp"
+            android:layout_marginTop="10dp"
+            android:text="المرحلة التالية ➜"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#2E7D32"
+            android:visibility="gone" />
+
+        <!-- ============================= -->
+        <!-- التوقيع -->
+        <!-- ============================= -->
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="25dp"
+            android:text="برمجة وتطوير: عصام المهدي"
+            android:textSize="14sp"
+            android:textColor="#888888"
+            android:gravity="center"
+            android:padding="12dp" />
+
     </LinearLayout>
 
-    <!-- شبكة المربعات المتقاطعة (5x5) -->
-    <GridLayout
-        android:id="@+id/crosswordGrid"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:columnCount="5"
-        android:rowCount="5"
-        android:layout_gravity="center"
-        android:layout_marginBottom="25dp"/>
-
-    <Button
-        android:id="@+id/btnCheck"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="تحقق من الحل"
-        android:backgroundTint="#4CAF50"
-        android:textColor="#FFFFFF"
-        android:textSize="16sp"/>
-
-</LinearLayout>
+</ScrollView> 
