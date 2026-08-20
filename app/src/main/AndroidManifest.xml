@@ -31,7 +31,6 @@
             </intent-filter>
         </activity>
 
-        <!-- النشاط الجديد للعبة -->
         <activity
             android:name=".WordOrderActivity"
             android:exported="false"
@@ -58,4 +57,4 @@
         </provider>
 
     </application>
-</manifest> 
+</manifest>
