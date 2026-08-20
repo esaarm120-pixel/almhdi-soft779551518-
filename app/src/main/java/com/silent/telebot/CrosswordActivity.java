@@ -146,7 +146,7 @@ public class CrosswordActivity extends AppCompatActivity {
                 "مكان نتعلم فيه",
                 "مدرسة",
                 600,
-                "🏆 وصلت إلى المستوى الأخير!"
+                "وصلت إلى المستوى الأخير!"
         ));
     }
 
@@ -271,7 +271,7 @@ public class CrosswordActivity extends AppCompatActivity {
 
                 Toast.makeText(
                         this,
-                        "أكمل جميع الحروف أولاً ✍️",
+                        "أكمل جميع الحروف أولاً",
                         Toast.LENGTH_SHORT
                 ).show();
 
@@ -298,7 +298,7 @@ public class CrosswordActivity extends AppCompatActivity {
             );
 
             tvMessage.setText(
-                    "🎉 إجابة صحيحة!\n\n" +
+                    "إجابة صحيحة!\n\n" +
                             stage.message +
                             "\n\n+" +
                             stage.points +
@@ -315,12 +315,189 @@ public class CrosswordActivity extends AppCompatActivity {
 
             Toast.makeText(
                     this,
-                    "أحسنت! إجابة صحيحة 👏",
+                    "أحسنت! إجابة صحيحة",
                     Toast.LENGTH_LONG
             ).show();
 
         } else {
 
             tvMessage.setText(
-                    "❌ الإجابة غير صحيحة\n\n" +
-                            "لا تست
+                    "الإجابة غير صحيحة\n\n" +
+                            "لا تستسلم، حاول مرة أخرى"
+            );
+
+            colorCells(
+                    Color.rgb(255, 220, 220)
+            );
+
+            Toast.makeText(
+                    this,
+                    "حاول مرة أخرى",
+                    Toast.LENGTH_SHORT
+            ).show();
+        }
+    }
+
+    private void showHint() {
+
+        Stage stage = stages.get(currentStage);
+
+        String answer =
+                normalizeArabic(stage.answer);
+
+        for (int i = 0;
+             i < crosswordGrid.getChildCount();
+             i++) {
+
+            View view =
+                    crosswordGrid.getChildAt(i);
+
+            if (!(view instanceof EditText)) {
+                continue;
+            }
+
+            EditText cell =
+                    (EditText) view;
+
+            if (cell.getText()
+                    .toString()
+                    .trim()
+                    .isEmpty()) {
+
+                cell.setText(
+                        String.valueOf(
+                                answer.charAt(i)
+                        )
+                );
+
+                Toast.makeText(
+                        this,
+                        "تم كشف أحد الحروف",
+                        Toast.LENGTH_SHORT
+                ).show();
+
+                return;
+            }
+        }
+
+        Toast.makeText(
+                this,
+                "جميع الحروف موجودة بالفعل",
+                Toast.LENGTH_SHORT
+        ).show();
+    }
+
+    private void nextStage() {
+
+        if (currentStage < stages.size() - 1) {
+
+            currentStage++;
+
+            loadStage(currentStage);
+
+        } else {
+
+            showFinishedDialog();
+        }
+    }
+
+    private void disableCells() {
+
+        for (int i = 0;
+             i < crosswordGrid.getChildCount();
+             i++) {
+
+            View view =
+                    crosswordGrid.getChildAt(i);
+
+            if (view instanceof EditText) {
+                view.setEnabled(false);
+            }
+        }
+    }
+
+    private void colorCells(int color) {
+
+        for (int i = 0;
+             i < crosswordGrid.getChildCount();
+             i++) {
+
+            View view =
+                    crosswordGrid.getChildAt(i);
+
+            if (view instanceof EditText) {
+                view.setBackgroundColor(color);
+            }
+        }
+    }
+
+    private String normalizeArabic(String text) {
+
+        return text
+                .replace("أ", "ا")
+                .replace("إ", "ا")
+                .replace("آ", "ا")
+                .replace("ة", "ه")
+                .replace("ى", "ي")
+                .replace("ـ", "")
+                .replace(" ", "")
+                .replace("\n", "")
+                .replace("\r", "")
+                .trim()
+                .toLowerCase();
+    }
+
+    private void showFinishedDialog() {
+
+        new AlertDialog.Builder(this)
+                .setTitle("تهانينا!")
+                .setMessage(
+                        "لقد أكملت جميع مراحل الكلمات المتقاطعة بنجاح!\n\n" +
+                                "مجموع نقاطك: " +
+                                score +
+                                "\n\n" +
+                                "استمر في التعلم والتحدي كل يوم.\n\n" +
+                                "برمجة وتطوير: عصام المهدي"
+                )
+                .setCancelable(false)
+                .setPositiveButton(
+                        "إعادة اللعب",
+                        (dialog, which) -> {
+
+                            currentStage = 0;
+                            score = 0;
+
+                            loadStage(currentStage);
+                        }
+                )
+                .setNegativeButton(
+                        "إغلاق",
+                        null
+                )
+                .show();
+    }
+
+    private static class Stage {
+
+        final String title;
+        final String question;
+        final String answer;
+        final int points;
+        final String message;
+
+        Stage(
+                String title,
+                String question,
+                String answer,
+                int points,
+                String message
+        ) {
+
+            this.title = title;
+            this.question = question;
+            this.answer = answer;
+            this.points = points;
+            this.message = message;
+        }
+    }
+            } 
