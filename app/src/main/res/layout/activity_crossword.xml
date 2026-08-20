@@ -1,232 +1,225 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<ScrollView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#EEF4FF"
-    android:fillViewport="true">
+    android:orientation="vertical"
+    android:background="#121212"
+    android:padding="12dp">
 
+    <!-- رأس اللعبة -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center_horizontal"
-        android:padding="20dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="خلطة حروف وكلمات متقاطعة"
-            android:textColor="#18345F"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:gravity="center"
-            android:layout_marginTop="12dp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="تحدَّ نفسك وتقدّم نحو القمة"
-            android:textColor="#4C6382"
-            android:textSize="15sp"
-            android:layout_marginTop="6dp" />
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:layout_marginBottom="8dp">
 
         <TextView
             android:id="@+id/levelText"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:text="المرحلة 1 من 12"
-            android:textColor="#18345F"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            android:layout_marginTop="14dp" />
-
-        <TextView
-            android:id="@+id/difficultyText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="الصعوبة: سهل"
-            android:textColor="#D26A20"
-            android:textSize="15sp"
-            android:layout_marginTop="3dp" />
+            android:textSize="16sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/scoreText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="النقاط: 0"
-            android:textColor="#257D5A"
-            android:textSize="15sp"
-            android:layout_marginTop="3dp" />
+            android:textSize="14sp"
+            android:textColor="#FFD700"
+            android:layout_marginEnd="10dp" />
 
         <TextView
-            android:id="@+id/motivationText"
+            android:id="@+id/starsText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🌟 0"
+            android:textSize="14sp"
+            android:textColor="#4CAF50"
+            android:layout_marginEnd="10dp" />
+
+        <TextView
+            android:id="@+id/coinsText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="💰 0"
+            android:textSize="14sp"
+            android:textColor="#FFC107" />
+    </LinearLayout>
+
+    <!-- مستوى الصعوبة -->
+    <TextView
+        android:id="@+id/difficultyText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="الصعوبة: سهل"
+        android:textSize="14sp"
+        android:textColor="#AAAAAA"
+        android:gravity="center" />
+
+    <!-- رسائل تحفيزية -->
+    <TextView
+        android:id="@+id/motivationText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="بداية ممتازة يا عصام المهدي"
+        android:textSize="14sp"
+        android:textColor="#FFD700"
+        android:gravity="center"
+        android:background="#1A1A1A"
+        android:padding="8dp"
+        android:layout_marginTop="8dp"
+        android:minHeight="40dp"
+        android:textStyle="bold" />
+
+    <!-- أزرار تبديل الوضع -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginTop="12dp">
+
+        <Button
+            android:id="@+id/scrambleModeButton"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="🔀 ترتيب الحروف"
+            android:backgroundTint="#2196F3"
+            android:textColor="#FFFFFF"
+            android:layout_marginEnd="4dp"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/crosswordModeButton"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:text="🧩 كلمات متقاطعة"
+            android:backgroundTint="#FF9800"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="4dp"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- ===== لوحة ترتيب الحروف ===== -->
+    <LinearLayout
+        android:id="@+id/scramblePanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp">
+
+        <TextView
+            android:id="@+id/scrambleAnswer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="#D9ECFF"
+            android:text="اختر الحروف لتكوين الكلمة"
+            android:textSize="18sp"
+            android:textColor="#4CAF50"
             android:gravity="center"
+            android:background="#2A2A2A"
             android:padding="12dp"
-            android:text="بداية ممتازة يا عصام المهدي!"
-            android:textColor="#18345F"
-            android:textSize="15sp"
-            android:textStyle="bold"
-            android:layout_marginTop="12dp"
-            android:layout_marginBottom="16dp" />
+            android:minHeight="50dp"
+            android:textStyle="bold" />
+
+        <LinearLayout
+            android:id="@+id/lettersRow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp"
+            android:gravity="center">
 
             <Button
-                android:id="@+id/scrambleModeButton"
+                android:id="@+id/scrambleCheckButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:text="خلطة الحروف"
+                android:text="✔ تحقق"
+                android:backgroundTint="#4CAF50"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#174A8B"
-                android:textAllCaps="false" />
+                android:layout_marginEnd="4dp" />
 
             <Button
-                android:id="@+id/crosswordModeButton"
+                android:id="@+id/scrambleNewButton"
                 android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_height="40dp"
                 android:layout_weight="1"
-                android:text="كلمات متقاطعة"
+                android:text="🔄 كلمة جديدة"
+                android:backgroundTint="#FF9800"
                 android:textColor="#FFFFFF"
-                android:backgroundTint="#174A8B"
-                android:textAllCaps="false" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/scramblePanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:paddingTop="22dp">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="كوّن الكلمة من الحروف الدائرية"
-                android:textColor="#18345F"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <TextView
-                android:id="@+id/scrambleAnswer"
-                android:layout_width="match_parent"
-                android:layout_height="64dp"
-                android:layout_marginTop="16dp"
-                android:background="#FFFFFF"
-                android:gravity="center"
-                android:text="اختر الحروف لتكوين الكلمة"
-                android:textColor="#18345F"
-                android:textSize="17sp"
-                android:textStyle="bold" />
-
-            <LinearLayout
-                android:id="@+id/lettersRow"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:gravity="center"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp">
-
-                <Button
-                    android:id="@+id/scrambleCheckButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="تحقق"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#1F8A62"
-                    android:textAllCaps="false" />
-
-                <Button
-                    android:id="@+id/scrambleNewButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="كلمة جديدة"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#174A8B"
-                    android:textAllCaps="false" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/crosswordPanel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:gravity="center_horizontal"
-            android:paddingTop="20dp"
-            android:visibility="gone">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="أكمل الكلمة الأفقية والعمودية"
-                android:textColor="#18345F"
-                android:textSize="18sp"
-                android:textStyle="bold" />
-
-            <GridLayout
-                android:id="@+id/crosswordGrid"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:columnCount="5"
-                android:rowCount="5"
-                android:padding="5dp"
-                android:background="#174A8B" />
-
-            <TextView
-                android:id="@+id/crosswordStatus"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="املأ الخانات"
-                android:textColor="#5E6D85"
-                android:textSize="16sp"
-                android:layout_marginTop="12dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="8dp">
-
-                <Button
-                    android:id="@+id/crosswordCheckButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="تحقق من الحل"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#1F8A62"
-                    android:textAllCaps="false" />
-
-                <Button
-                    android:id="@+id/crosswordClearButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="مسح"
-                    android:textColor="#FFFFFF"
-                    android:backgroundTint="#174A8B"
-                    android:textAllCaps="false" />
-            </LinearLayout>
+                android:layout_marginStart="4dp" />
         </LinearLayout>
     </LinearLayout>
-</ScrollView> 
+
+    <!-- ===== لوحة الكلمات المتقاطعة ===== -->
+    <LinearLayout
+        android:id="@+id/crosswordPanel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_marginTop="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/crosswordStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="املأ الخانات - المحاولات: 3"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:gravity="center"
+            android:background="#1E1E1E"
+            android:padding="8dp" />
+
+        <GridLayout
+            android:id="@+id/crosswordGrid"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_gravity="center"
+            android:background="#1E1E1E"
+            android:padding="4dp" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/crosswordCheckButton"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="✔ تحقق"
+                android:backgroundTint="#4CAF50"
+                android:textColor="#FFFFFF"
+                android:layout_marginEnd="4dp" />
+
+            <Button
+                android:id="@+id/crosswordClearButton"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:text="🧹 مسح الكل"
+                android:backgroundTint="#F44336"
+                android:textColor="#FFFFFF"
+                android:layout_marginStart="4dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>
