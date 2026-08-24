@@ -6,11 +6,12 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.Bundle;
-import android.widget.CompoundButton;
 import android.widget.Switch;
 import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.silent.telebot.R;   // ← هذا السطر الجديد
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,7 +50,7 @@ public class AppListActivity extends Activity {
             if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
             String name = pm.getApplicationLabel(app).toString();
             String packageName = app.packageName;
-            boolean blocked = false; // سيُقرأ من SharedPreferences
+            boolean blocked = false;
             appList.add(new AppItem(name, packageName, blocked, app.loadIcon(pm)));
         }
 
@@ -88,4 +89,4 @@ public class AppListActivity extends Activity {
         startService(new Intent(this, FirewallVpnService.class));
         Toast.makeText(this, "✅ جدار الحماية مفعل", Toast.LENGTH_SHORT).show();
     }
-                       }
+                                   } 
