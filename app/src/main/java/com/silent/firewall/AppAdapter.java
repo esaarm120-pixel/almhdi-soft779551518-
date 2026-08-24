@@ -11,6 +11,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.silent.telebot.R;   // ← هذا السطر الجديد
+
 import java.util.List;
 
 public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder> {
@@ -35,7 +37,6 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder> {
         holder.icon.setImageDrawable(item.icon);
         holder.name.setText(item.name);
 
-        // قراءة الحالة من SharedPreferences
         SharedPreferences prefs = context.getSharedPreferences("firewall", Context.MODE_PRIVATE);
         boolean blocked = prefs.getBoolean(item.packageName, false);
         holder.switchBlocked.setChecked(blocked);
@@ -63,4 +64,4 @@ public class AppAdapter extends RecyclerView.Adapter<AppAdapter.ViewHolder> {
             switchBlocked = itemView.findViewById(R.id.switch_block);
         }
     }
-}
+} 
