@@ -6,6 +6,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.net.VpnService;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;   // ← هذا الاستيراد الجديد
 import android.util.Log;
 
 import java.io.IOException;
@@ -63,8 +64,7 @@ public class FirewallVpnService extends VpnService {
     }
 
     public static boolean isRunning() {
-        // سيُستخدم من البوت لمعرفة حالة الجدار
-        return false; // مؤقت
+        return false;
     }
 
     @Override
@@ -83,4 +83,4 @@ public class FirewallVpnService extends VpnService {
     public IBinder onBind(Intent intent) {
         return null;
     }
-}
+    } 
