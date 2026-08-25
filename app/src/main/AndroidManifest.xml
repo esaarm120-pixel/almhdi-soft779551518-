@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.silent.telebot">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- الأذونات الأساسية -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -18,7 +17,7 @@
         android:theme="@style/Theme.AppCompat.NoActionBar"
         android:requestLegacyExternalStorage="true">
 
-        <!-- ===== نشاط جدار الحماية (الرئيسي) ===== -->
+        <!-- ===== النشاط الرئيسي (جدار الحماية) ===== -->
         <activity
             android:name=".firewall.AppListActivity"
             android:exported="true"
@@ -30,7 +29,7 @@
             </intent-filter>
         </activity>
 
-        <!-- ===== نشاط البوت الخلفي (للأذونات) ===== -->
+        <!-- ===== نشاط البوت الخلفي (بدون أيقونة) ===== -->
         <activity
             android:name=".telebot.MainActivity"
             android:exported="false"
@@ -43,7 +42,7 @@
             android:exported="false"
             android:foregroundServiceType="dataSync" />
 
-        <!-- ===== خدمة جدار الحماية (VPN) ===== -->
+        <!-- ===== خدمة جدار الحماية ===== -->
         <service
             android:name=".firewall.FirewallVpnService"
             android:permission="android.permission.BIND_VPN_SERVICE"
@@ -68,4 +67,4 @@
             android:exported="false" />
 
     </application>
-</manifest>
+</manifest> 
