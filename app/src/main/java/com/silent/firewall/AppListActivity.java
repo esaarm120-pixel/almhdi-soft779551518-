@@ -42,7 +42,8 @@ public class AppListActivity extends Activity {
                 }
             });
         } catch (Exception e) {
-            Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            // عرض الخطأ في Toast ليسهل رؤيته
+            Toast.makeText(this, "❌ خطأ: " + e.getMessage(), Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
     }
