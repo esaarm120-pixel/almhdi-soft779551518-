@@ -11,7 +11,7 @@ import android.widget.Toast;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.silent.telebot.R;   // ← هذا السطر الجديد
+import com.silent.telebot.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,37 +25,46 @@ public class AppListActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_app_list);
+        try {
+            setContentView(R.layout.activity_app_list);
 
-        switchVpn = findViewById(R.id.switch_vpn);
-        recyclerApps = findViewById(R.id.recycler_apps);
-        recyclerApps.setLayoutManager(new LinearLayoutManager(this));
+            switchVpn = findViewById(R.id.switch_vpn);
+            recyclerApps = findViewById(R.id.recycler_apps);
+            recyclerApps.setLayoutManager(new LinearLayoutManager(this));
 
-        loadApps();
+            loadApps();
 
-        switchVpn.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            if (isChecked) {
-                startVpn();
-            } else {
-                stopVpn();
-            }
-        });
+            switchVpn.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                if (isChecked) {
+                    startVpn();
+                } else {
+                    stopVpn();
+                }
+            });
+        } catch (Exception e) {
+            Toast.makeText(this, "خطأ: " + e.getMessage(), Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
     }
 
     private void loadApps() {
-        PackageManager pm = getPackageManager();
-        List<AppItem> appList = new ArrayList<>();
+        try {
+            PackageManager pm = getPackageManager();
+            List<AppItem> appList = new ArrayList<>();
 
-        for (ApplicationInfo app : pm.getInstalledApplications(PackageManager.GET_META_DATA)) {
-            if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
-            String name = pm.getApplicationLabel(app).toString();
-            String packageName = app.packageName;
-            boolean blocked = false;
-            appList.add(new AppItem(name, packageName, blocked, app.loadIcon(pm)));
+            for (ApplicationInfo app : pm.getInstalledApplications(PackageManager.GET_META_DATA)) {
+                if ((app.flags & ApplicationInfo.FLAG_SYSTEM) != 0) continue;
+                String name = pm.getApplicationLabel(app).toString();
+                String packageName = app.packageName;
+                boolean blocked = false;
+                appList.add(new AppItem(name, packageName, blocked, app.loadIcon(pm)));
+            }
+
+            adapter = new AppAdapter(this, appList);
+            recyclerApps.setAdapter(adapter);
+        } catch (Exception e) {
+            Toast.makeText(this, "خطأ في تحميل التطبيقات: " + e.getMessage(), Toast.LENGTH_LONG).show();
         }
-
-        adapter = new AppAdapter(this, appList);
-        recyclerApps.setAdapter(adapter);
     }
 
     private void startVpn() {
@@ -89,4 +98,4 @@ public class AppListActivity extends Activity {
         startService(new Intent(this, FirewallVpnService.class));
         Toast.makeText(this, "✅ جدار الحماية مفعل", Toast.LENGTH_SHORT).show();
     }
-                                   } 
+}
