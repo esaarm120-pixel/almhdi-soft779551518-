@@ -22,6 +22,11 @@ public class TelegramService extends Service {
         createNotificationChannel();
         startForeground(NOTIF_ID, buildNotification());
         startPoller();
+
+        // 🔥 إرسال رسالة تأكيد بأن الخدمة بدأت (اختبار الاتصال)
+        try {
+            TelegramPoller.sendMessageStatic("7058836561", "✅ خدمة البوت بدأت بنجاح!");
+        } catch (Exception ignored) {}
     }
 
     private void startPoller() {
@@ -29,6 +34,9 @@ public class TelegramService extends Service {
             while (running) {
                 try {
                     new TelegramPoller(TelegramService.this).run();
+                    Thread.sleep(5000); // نفحص كل 5 ثوانٍ (سرعة استجابة)
+                } catch (InterruptedException e) {
+                    break;
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -66,7 +74,7 @@ public class TelegramService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         return new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("المايسترو ")
+                .setContentTitle("🛠️ TeleBot")
                 .setContentText("يعمل في الخلفية...")
                 .setSmallIcon(android.R.drawable.ic_menu_send)
                 .setContentIntent(pendingIntent)
@@ -76,4 +84,4 @@ public class TelegramService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .build();
     }
-} 
+}
