@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#075E54">  <!-- لون واتساب الأخضر الداكن -->
+    android:background="#075E54">
 
     <!-- الشريط العلوي -->
     <LinearLayout
@@ -14,10 +14,11 @@
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
 
+        <!-- تم إزالة الصورة (android:src) لعدم وجودها، واستخدمنا أيقونة نظامية مؤقتة -->
         <ImageView
             android:layout_width="32dp"
             android:layout_height="32dp"
-            android:src="@drawable/ic_whatsapp_status" /> <!-- يمكنك إضافة أيقونة مؤقتة -->
+            android:src="@android:drawable/ic_menu_camera" />
 
         <TextView
             android:layout_width="0dp"
