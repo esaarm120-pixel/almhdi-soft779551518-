@@ -11,11 +11,11 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-    - name: Build with Gradle (full logs)
+    - name: Build with Gradle
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: '8.4'
-        arguments: assembleDebug --stacktrace --info --scan
+        arguments: assembleDebug --stacktrace --info
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
