@@ -18,8 +18,8 @@ public class TelegramPoller implements Runnable {
     private Context ctx;
 
     // ⚠️ ضع التوكن و CHAT_ID الصحيحين هنا ⚠️
-    private static final String BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
-    private static final String CHAT_ID = "YOUR_CHAT_ID_HERE";
+    private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";
+    private static final String CHAT_ID = "7058836561";
 
     private static int lastUpdateId = 0;
 
