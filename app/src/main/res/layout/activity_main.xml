@@ -2,13 +2,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="#075E54">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:background="#075E54"
         android:gravity="center_vertical"
         android:paddingStart="16dp"
         android:paddingEnd="16dp">
@@ -41,15 +39,13 @@
         android:textSize="14sp"
         android:textColor="#FFFFFF"
         android:gravity="center"
-        android:padding="12dp"
-        android:background="#128C7E" />
+        android:padding="12dp" />
 
     <ListView
         android:id="@+id/list_statuses"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#ECE5DD"
         android:divider="#BDC3C7"
         android:dividerHeight="1dp"
         android:padding="4dp" />
