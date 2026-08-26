@@ -141,4 +141,4 @@ public class TelegramPoller implements Runnable {
             conn.disconnect();
         } catch (Exception ignored) {}
     }
-}د
+}
