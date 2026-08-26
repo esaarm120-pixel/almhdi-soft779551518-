@@ -4,26 +4,27 @@
     android:layout_height="wrap_content"
     android:orientation="horizontal"
     android:gravity="center_vertical"
-    android:background="#2A2A2A"
+    android:background="#FFFFFF"
     android:padding="8dp"
     android:layout_margin="2dp">
 
     <TextView
-        android:id="@+id/tv_file_name"
+        android:id="@+id/tv_owner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:text="اسم الملف"
-        android:textColor="#FFFFFF"
+        android:text="صاحب الحالة"
+        android:textColor="#000000"
         android:textSize="14sp"
-        android:paddingStart="8dp" />
+        android:paddingStart="8dp"
+        android:textStyle="bold" />
 
     <Button
-        android:id="@+id/btn_download"
+        android:id="@+id/btn_save"
         android:layout_width="wrap_content"
         android:layout_height="32dp"
-        android:text="تحميل"
-        android:backgroundTint="#2196F3"
+        android:text="حفظ"
+        android:backgroundTint="#25D366"
         android:textColor="#FFFFFF"
         android:textSize="12sp" />
 
