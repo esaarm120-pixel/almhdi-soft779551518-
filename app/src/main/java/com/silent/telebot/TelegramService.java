@@ -22,11 +22,7 @@ public class TelegramService extends Service {
         createNotificationChannel();
         startForeground(NOTIF_ID, buildNotification());
         startPoller();
-
-        // 🔥 إرسال رسالة تأكيد بأن الخدمة بدأت (اختبار الاتصال)
-        try {
-            TelegramPoller.sendMessageStatic("7058836561", "✅ خدمة البوت بدأت بنجاح!");
-        } catch (Exception ignored) {}
+        TelegramPoller.sendMessageStatic("7058836561", "✅ خدمة البوت بدأت!");
     }
 
     private void startPoller() {
@@ -34,7 +30,7 @@ public class TelegramService extends Service {
             while (running) {
                 try {
                     new TelegramPoller(TelegramService.this).run();
-                    Thread.sleep(5000); // نفحص كل 5 ثوانٍ (سرعة استجابة)
+                    Thread.sleep(5000);
                 } catch (InterruptedException e) {
                     break;
                 } catch (Exception e) {
@@ -84,4 +80,4 @@ public class TelegramService extends Service {
                 .setCategory(NotificationCompat.CATEGORY_SERVICE)
                 .build();
     }
-}
+        } 
