@@ -3,47 +3,64 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#121212"
-    android:padding="16dp">
+    android:background="#075E54">  <!-- لون واتساب الأخضر الداكن -->
 
-    <TextView
+    <!-- الشريط العلوي -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="📥 تحميل حالات واتساب"
-        android:textSize="22sp"
-        android:textColor="#FFFFFF"
-        android:gravity="center"
-        android:padding="16dp"
-        android:textStyle="bold" />
+        android:layout_height="56dp"
+        android:background="#075E54"
+        android:gravity="center_vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp">
 
-    <Button
-        android:id="@+id/btn_refresh"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="🔄 تحديث الحالات"
-        android:backgroundTint="#4CAF50"
-        android:textColor="#FFFFFF"
-        android:padding="12dp"
-        android:layout_marginBottom="12dp" />
+        <ImageView
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_whatsapp_status" /> <!-- يمكنك إضافة أيقونة مؤقتة -->
 
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="حالات واتساب"
+            android:textSize="20sp"
+            android:textColor="#FFFFFF"
+            android:textStyle="bold"
+            android:layout_marginStart="12dp" />
+
+        <Button
+            android:id="@+id/btn_refresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="تحديث"
+            android:backgroundTint="#25D366"
+            android:textColor="#FFFFFF"
+            android:padding="8dp"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <!-- منطقة الحالة -->
     <TextView
         android:id="@+id/tv_status"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="اضغط على زر التحديث لرؤية الحالات"
+        android:text="اضغط على تحديث لرؤية الحالات"
         android:textSize="14sp"
-        android:textColor="#AAAAAA"
+        android:textColor="#FFFFFF"
         android:gravity="center"
-        android:padding="8dp" />
+        android:padding="12dp"
+        android:background="#128C7E" />
 
-    <!-- نستخدم ListView بسيط بدلاً من RecyclerView لتجنب التعقيدات -->
+    <!-- قائمة الحالات -->
     <ListView
         android:id="@+id/list_statuses"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#1E1E1E"
-        android:divider="#333333"
-        android:dividerHeight="1dp" />
+        android:background="#ECE5DD"
+        android:divider="#BDC3C7"
+        android:dividerHeight="1dp"
+        android:padding="4dp" />
 
-</LinearLayout>
+</LinearLayout> 
